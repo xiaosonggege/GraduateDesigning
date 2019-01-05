@@ -11,39 +11,41 @@
 '''
 
 from sklearn import model_selection
+from sklearn.metrics import precision_score, recall_score, f1_score
 import numpy as np
 
-def training_main(model, training_data, Evaluation_index):
+def training_main(model_name, model, training_data, Threshold= None):
     '''
     针对多个模型进行训练操作
+    :param model_name: 模型名称
     :param model: 需要训练的模型
     :param training_data: 需要载入的数据集
-    :param Evaluation_index: 评价指标， type= tuple
+    :param Threshold: type= (T_pre, T_rec, T_F1), 精确率、召回率和F1指标阈值
     :return: None
     '''
 
     # k-fold对象,用于生成训练集和交叉验证集数据
-    kf = model_selection.KFold(n_splits=5, shuffle=False, random_state=32)
+    kf = model_selection.KFold(n_splits=5, shuffle=True, random_state=32)
+    #交叉验证次数序号
+    fold = 1
 
-    while 1:
+    for train_data_index, cv_data_index in kf.split(training_data):
+        # 找到对应索引数据
+        train_data, cv_data = training_data[train_data_index], training_data[cv_data_index]
+        # 训练数据
+        model.fit(X=train_data[:, :4], y=train_data[:, -1])
 
-        for train_data_index, cv_data_index in kf.split(training_data):
-            # 找到对应索引数据
-            train_data, cv_data = training_data[train_data_index], training_data[cv_data_index]
-            # 训练数据
-            model.fit(X=train_data[:, :4], y=train_data[:, -1])
+        # 对验证集进行预测
+        pred_cv = model.predict(cv_data[:, :4])
+        #对验证数据进行指标评估
+        precision_rate = 0 if fold == 1 else ((fold - 1) * precision_rate + precision_score(cv_data[:-1], pred_cv)) / fold
+        recall_rate = 0 if fold == 1 else ((fold - 1) * recall_rate + recall_score(cv_data[:-1], pred_cv)) / fold
+        F1_rate = 0 if fold == 1 else ((fold - 1) * F1_rate + f1_score(cv_data[:-1], pred_cv)) / fold
 
-            # 对验证集进行预测
-            pred_cv = model.predict(cv_data[:, :4])
+    print('模型 %s在验证集上的性能指标为: 准确率- %.8f, 召回率- %.8f, F1指标- %.8f' %
+          (model_name, precision_rate, recall_rate, F1_rate))
+
+if __name__ == '__main__':
+    training_main()
 
 
-
-        print('CART树个数: %s, 验证集MSE: %s' % (model.n_estimators, MSE))
-        X = [1] if X == [] else X + [X[-1] + 1]
-        Y.append(MSE)
-        if MSE < Threshold:
-            break
-        else:
-            MSE, fold = 0, 1
-            # 如果验证集MSE值大于阈值则将GBDT中弱学习器数量自增1
-            model.n_estimators += 1
