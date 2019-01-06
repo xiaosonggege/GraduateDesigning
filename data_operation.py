@@ -32,6 +32,7 @@ data = np.ones(shape= [6250*4, 11])
 for num in range(3, 7):
     p = r'D:\GraduateDesigning\ICT DataSet\Label_%s.txt' % num
     with open(p, 'r') as file:
+        print('正在处理第%d个模型' % num)
         sub_data = np.loadtxt(file, delimiter=',', skiprows=0)
         i = 0
         while i <= sub_data.shape[0]:
@@ -39,10 +40,22 @@ for num in range(3, 7):
                 sub_data = np.delete(sub_data, i, axis= 0)
             else:
                 i += 1
+                print(i)
         sub_data = np.delete(sub_data, [3, 4, 5], axis= 1)
         data = sub_data[:6251, :] if data.any() == 0 else np.vstack((data, sub_data[:6251, :]))
 
 SaveFile(data, savepickle_p= r'D:\GraduateDesigning\data.pickle')
+
+def LoadFile(p):
+    '''读取文件'''
+    data = np.array([0])
+    try:
+        with open(p, 'rb') as file:
+            data = pickle.load(file)
+    except:
+        print('文件不存在!')
+    finally:
+        return data
 
 class StatisticStack:
     '''
@@ -93,6 +106,39 @@ class StatisticStack:
             np.sum(self.__time_series)
         self.__spectral_energy = quad(StatisticStack.fft(time_series), StatisticStack.fft(self.__time_series)[0],
                                       StatisticStack.fft(self.__time_series)[-1])
+
+    def feature_stack(self):
+        '''
+        对每个序列的所有特征组合为特征向量
+        :return: 数据集中单个列按采样频率计算滑动窗口计算后的特征向量
+        '''
+        return np.array([self.__mean, self.__var, self.__std, self.__median, self.__min, self.__max, self.__max_min,
+                         self.__interquartile_range, self.__kurtosis, self.__skewness, self.__integral, self.__auto_corr,
+                         self.__mean_cross_rate, self.__spectral_energy])
+
+def matrix_operation(data):
+    '''
+    对进行处理后的数据集进行滑动窗口特征计算，并生成数据矩阵
+    :param data: 待处理数据
+    :return: 数据矩阵
+    '''
+    dataset = np.zeros(shape= (1, 140))
+    feature_dataset = np.zeros(shape= (1, 10))
+    for i in range(0, data.shape[0], 100):
+        #因为data最后一列为标签
+        for j in range(data.shape[-1]-1):
+            statisticstack = StatisticStack(data[i:i+100, j])
+            feature_stack = statisticstack.feature_stack()
+            feature_dataset = feature_stack if feature_dataset.any() == 0 else \
+                np.hstack((feature_dataset, feature_stack[np.newaxis, :]))
+
+        dataset = feature_dataset if dataset.any() == 0 else np.vstack((dataset, feature_dataset))
+
+    #将特征矩阵和标签向量进行组合并返回
+    return np.hstack((dataset, data[:, -1][np.newaxis, :]))
+
+
+
 
 
 
