@@ -12,6 +12,7 @@
 import numpy as np
 import scipy as sci
 from scipy import stats
+from scipy.integrate import quad
 import pickle
 import os
 
@@ -49,9 +50,7 @@ class StatisticStack:
     '''
     __slots__ = ('__time_series', '__mean', '__var', '__std', '__median', '__min', '__max',
                  '__max_min', '__interquartile_range', '__kurtosis', '__skewness', '__rms',
-                 '__integral', '__double_integral', '__auto_corr', '__mean_cross_rate',
-                 '__DC', '__spectral_energy', '__spectral_entropy', '__wavelet_entropy',
-                 '__wavelet_magnitude')
+                 '__integral', '__auto_corr', '__mean_cross_rate', '__DC', '__spectral_energy')
 
     @staticmethod
     def fft(time_series):
@@ -88,6 +87,13 @@ class StatisticStack:
             np.quantile(self.__time_series, 0.25)
         self.__kurtosis = stats.kurtosis(self.__time_series)
         self.__skewness = stats.skew(self.__time_series)
-        self.__integral = sci.
+        self.__integral = quad(lambda x: x, self.__time_series[0], self.__time_series[-1])
+        self.__auto_corr = stats.pearsonr(self.__time_series, self.__time_series)[0]
+        self.__mean_cross_rate = np.sum(np.where(self.__time_series > self.__mean, 1, 0)) / \
+            np.sum(self.__time_series)
+        self.__spectral_energy = quad(StatisticStack.fft(time_series), StatisticStack.fft(self.__time_series)[0],
+                                      StatisticStack.fft(self.__time_series)[-1])
+
+
 
 
