@@ -115,7 +115,7 @@ def matrix_operation(data):
     '''
     dataset = np.zeros(shape= (1, 140))
     feature_dataset = np.zeros(shape= (1, 10))
-    for i in range(0, data.shape[0], 100):
+    for i in range(0, data.shape[0], 50):
         #因为data最后一列为标签
         for j in range(data.shape[-1]-1):
             statisticstack = StatisticStack(data[i:i+100, j])
