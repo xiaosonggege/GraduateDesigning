@@ -19,7 +19,7 @@ import pickle
 import os
 
 #data为4类数据经过数据均衡、去噪后的矩阵
-data = np.ones(shape= [6250*4, 11])
+data = np.ones(shape= [62550*4, 11])
 for num in range(3, 7):
     p = r'D:\GraduateDesigning\ICT DataSet\Label_%s.txt' % num
     with open(p, 'r') as file:

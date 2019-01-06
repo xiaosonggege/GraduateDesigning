@@ -28,14 +28,14 @@ def SaveFile(data, savepickle_p):
             pickle.dump(data, file)
 
 #data为4类数据经过数据均衡、去噪后的矩阵
-data = np.ones(shape= [6250*4, 11])
+data = np.ones(shape= [62550*4, 11])
 for num in range(3, 7):
     p = r'D:\GraduateDesigning\ICT DataSet\Label_%s.txt' % num
     with open(p, 'r') as file:
         print('正在处理第%d个模型' % num)
-        sub_data = np.loadtxt(file, delimiter=',', skiprows=0)
+        sub_data = np.loadtxt(file, delimiter=',', skiprows=0)[:100000, :]
         i = 0
-        while i <= sub_data.shape[0]:
+        while i < sub_data.shape[0]:
             if sub_data[i, :].any() == 0 or sub_data[i, -2] < 0:
                 sub_data = np.delete(sub_data, i, axis= 0)
             else:
@@ -73,15 +73,6 @@ class StatisticStack:
         :return: 时间序列映射到频域后的频谱信号
         '''
         return sci.fft(time_series)
-
-    @staticmethod
-    def wavelet(time_series):
-        '''
-        对时域信号进行小波变换
-        :param time_series: 待处理的时间序列
-        :return: 时间序列映射到小波变换域
-        '''
-        pass
 
     def __init__(self, time_series):
         '''
