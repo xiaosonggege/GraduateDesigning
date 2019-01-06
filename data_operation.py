@@ -135,8 +135,8 @@ def Acc_h(a, v):
 def GravityEstimate(acc_data, Gest, w_g, Thvar_ori, var_Thr, inc):
     '''
     估计重力加速度在三个坐标轴上的数值
-    :param acc_data: 重力加速度矩阵, shape= (len_window, 3)
-    :param Gest: 重力加速度初始值
+    :param acc_data: 重力加速度矩阵, shape= (len_window*4, 3) #考虑到任何分量都大于w_g
+    :param Gest: 重力加速度初始值, shape= (gx, gy, gz)
     :param w_g: 窗内加速度均值和重力加速度之差的阈值
     :param Thvar_ori: 窗内加速度方差阈值
     :param var_Thr: 方差条件阈值
@@ -144,6 +144,22 @@ def GravityEstimate(acc_data, Gest, w_g, Thvar_ori, var_Thr, inc):
     :return: 三个方向的重力加速度值, shape= (vx, vy, vz)
     '''
     #计算窗内各个轴上加速度均值和方差
+    W_mean = np.mean(acc_data[:int(acc_data.shape[0]/4), :], axis= 1)
+    W_var = np.var(acc_data[:int(acc_data.shape[0]/4), :], axis= 1)
+    #如果滑动窗口内的加速度均值和估计的重力加速度相差较大，则复位方差阈值
+    if (W_mean - Gest).any() >= w_g:
+        THvar = Thvar_ori #bug 改！
+    if W_var.any() < 1.5:
+        if W_var.any() < THvar:
+            Gest = W_mean
+            THvar = (W_var + THvar) / 2
+            VarIncrease = THvar * inc
+        else:
+            THvar = THvar + VarIncrease
+    else:
+        Gest = np.mean(acc_data, axis= 1)
+    return Gest
+
 
 
 def matrix_operation(data):
