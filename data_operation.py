@@ -132,7 +132,19 @@ def Acc_h(a, v):
     h = d - p
     return h
 
-def
+def GravityEstimate(acc_data, Gest, w_g, Thvar_ori, var_Thr, inc):
+    '''
+    估计重力加速度在三个坐标轴上的数值
+    :param acc_data: 重力加速度矩阵, shape= (len_window, 3)
+    :param Gest: 重力加速度初始值
+    :param w_g: 窗内加速度均值和重力加速度之差的阈值
+    :param Thvar_ori: 窗内加速度方差阈值
+    :param var_Thr: 方差条件阈值
+    :param inc: inc数值
+    :return: 三个方向的重力加速度值, shape= (vx, vy, vz)
+    '''
+    #计算窗内各个轴上加速度均值和方差
+
 
 def matrix_operation(data):
     '''
