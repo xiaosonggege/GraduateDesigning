@@ -123,4 +123,9 @@ class MultiClassifiers:
 
         return xgbc
 
+if __name__ == '__main__':
+    dataset = np.arange(50)
+    multiclassifier = MultiClassifiers(dataset= dataset)
+
+
 
