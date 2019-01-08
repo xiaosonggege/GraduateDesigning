@@ -35,7 +35,7 @@ def EquilibriumDenoising(p_former):
     '''
 
     # data为4类数据经过数据均衡、去噪后的矩阵
-    data = np.ones(shape=[125050 * 4, 11])  # 如果制作5000个shape= [62550*4, 11], 10000个shape= [125050*4, 11]
+    data = np.zeros(shape=[125050 * 4, 11])  # 如果制作5000个shape= [62550*4, 11], 10000个shape= [125050*4, 11]
     for num in range(3, 7):
         # p = r'F:\GraduateDesigning\ICT DataSet\Label_%s.txt' % num
         p = p_former + r'\\' + r'ICT DataSet\Label_%s.txt' % num
