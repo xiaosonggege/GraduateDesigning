@@ -10,30 +10,60 @@
 @desc:
 '''
 
-import numpy as np
-import scipy as sci
-from scipy import stats
-from scipy.integrate import quad
-from data_operation import SaveFile
-import pickle
-import os
+import multiprocessing
+import time
 
-#data为4类数据经过数据均衡、去噪后的矩阵
-data = np.ones(shape= [62550*4, 11])
-for num in range(3, 7):
-    p = r'D:\GraduateDesigning\ICT DataSet\Label_%s.txt' % num
-    with open(p, 'r') as file:
-        print('正在处理第%d个模型' % num)
-        sub_data = np.loadtxt(file, delimiter=',', skiprows=0)[:62550, :]
-        SaveFile(sub_data, r'D:\GraduateDesigning\ICT DataSet\Label_revise_%s.txt')
-        # print('第%s个文件转换后的维度是: (%d, %d)' % (num, sub_data.shape[0], sub_data.shape[-1]))
-#         i = 0
-#         while i <= sub_data.shape[0]:
-#             if sub_data[i, :].any() == 0 or sub_data[i, -2] < 0:
-#                 sub_data = np.delete(sub_data, i, axis= 0)
-#             else:
-#                 i += 1
-#                 print(i)
-#         sub_data = np.delete(sub_data, [3, 4, 5], axis= 1)
-#         data = sub_data[:6251, :] if data.any() == 0 else np.vstack((data, sub_data[:6251, :]))
+
+# def run(lock, q, num):
+#     with lock:
+#         print('run')
+#         for i in range(num):
+#             q.put(i, block=False)
 #
+#
+# def run_1(lock, q, num):
+#     lock.acquire()
+#     print('run_1')
+#     try:
+#         for i in range(num):
+#             print(q.get(block=False))
+#     except:
+#         pass
+#     finally:
+#         lock.release()
+#
+# def run_2(lock, q, num):
+#     lock.acquire()
+#     print('run_2')
+#     try:
+#         for i in range(num):
+#             q.put(i, block= False)
+#     except:
+#         pass
+#     finally:
+#         lock.release()
+
+def fun(num):
+    print(num)
+
+
+if __name__ == '__main__':
+    q = multiprocessing.Queue()
+    lock = multiprocessing.Lock()
+    # p = multiprocessing.Process(target= run, args= (lock, q, 6,))
+    # p_1 = multiprocessing.Process(target= run_1, args= (lock, q, 12,))
+    # p_2 = multiprocessing.Process(target= run_2, args= (lock, q, 6,))
+    # p.start()
+    # p_2.start()
+    # p_1.start()
+    # p_1.join()
+    # print(q)
+    pool = multiprocessing.Pool(processes= 4)
+    for i in range(4):
+        pool.apply(fun, args= (i, ))
+
+    pool.close()
+    pool.join()
+
+
+
