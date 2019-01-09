@@ -217,7 +217,7 @@ if __name__ == '__main__':
     bar_width = 0.5
     opacity = 0.8
     plt.xticks(index, classifier, fontsize= 5.7)
-    color = ['r', 'g', 'b', 'c', 'm', 'olive', 'indigo', 'black']
+    color = ['r', 'g', 'b', 'c', 'm', 'olive', 'darkgoldenrod', 'black']
     plt.bar(index, Accuracy, bar_width, alpha=opacity,
             color=color)
     for a, b in zip(index - 0.3, Accuracy):
@@ -225,13 +225,14 @@ if __name__ == '__main__':
     plt.ylabel('Accuracy')
 
     #三
+    linestyle= ['--', '-.', ':', '-', '--', '-.', ':', '-']
     marker = ['*', 's', 'd', 'v', 'h', '8', 'p', '+']
     index = np.arange(8)
     picture = plt.figure('zhexian')
     plt.xticks(index, mode)
-    color = ['r', 'g', 'b', 'c', 'm', 'olive', 'indigo', 'black']
+    color = ['r', 'g', 'b', 'c', 'm', 'olive', 'darkgoldenrod', 'black']
     for model in range(8):
-        plt.plot(index, acc[:, model]*100, color = color[model], label= classifier[model], marker= marker[model])
+        plt.plot(index, acc[:, model]*100, linestyle= linestyle[model], color = color[model], label= classifier[model], marker= marker[model])
     plt.ylabel('The Accuracy')
     plt.legend()
 
