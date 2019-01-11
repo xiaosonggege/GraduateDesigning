@@ -165,11 +165,11 @@ def GravityEstimate(acc_data, Gest, w_g, Thvar_ori, var_Thr, inc):
 def matrix_operation(data):
     '''
     对进行处理后的数据集进行滑动窗口特征计算，并生成数据矩阵
-    :param data: 待处理数据
+    :param data: 待处理数据,shape= (5000/10000, 9+1)
     :return: 数据矩阵
     '''
-    dataset = np.zeros(shape= (1, 140))
-    feature_dataset = np.zeros(shape= (1, 10))
+    dataset = np.zeros(shape= (1, 9*14)) #此处9*14需要修改为9*每列具有的所有特征数（统计+时域+频域）总和
+    feature_dataset = np.zeros(shape= (1, 14)) #此处14需要修改为每列具有的所有特征数（统计+时域+频域）总和
     for i in range(0, data.shape[0], 50):
         #因为data最后一列为标签
         for j in range(data.shape[-1]-1):
@@ -179,6 +179,7 @@ def matrix_operation(data):
                 np.hstack((feature_dataset, feature_stack[np.newaxis, :]))
 
         dataset = feature_dataset if dataset.any() == 0 else np.vstack((dataset, feature_dataset))
+        feature_dataset = np.zeros(shape= (1, 14))
 
     #将特征矩阵和标签向量进行组合并返回
     return np.hstack((dataset, data[:, -1][np.newaxis, :]))
