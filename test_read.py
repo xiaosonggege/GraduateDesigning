@@ -14,6 +14,7 @@ import multiprocessing
 import time
 import pickle
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 # def run(lock, q, num):
@@ -88,6 +89,7 @@ if __name__ == '__main__':
         b = pickle.load(file)
         print(file.tell())
         print(b)
+
 
 
 

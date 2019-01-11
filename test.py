@@ -61,7 +61,22 @@ def demention(t_sne, dataset):
     '''
     pass
 
+def cdf_picture(statistic_data, data_name):
+    '''
+    对统计量进行CDF绘图
+    :param statistic_data: 待统计数据
+    :param data_name: 统计量名称
+    :return: None
+    '''
+    picture = plt.figure(data_name)
+    hist = plt.hist(x= statistic_data, bins= 100, normed= True, cumulative= True, histtype= 'step')
+    plt.show()
+
+
 if __name__ == '__main__':
-    training_main()
+    # training_main()
+    a = np.arange(20)
+    cdf_picture(a, 'a')
+
 
 
