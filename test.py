@@ -15,6 +15,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import precision_score, recall_score, f1_score
 from xgboost import plot_importance
 from matplotlib import pyplot as plt
+from sklearn.manifold import TSNE
 import os
 os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin'
 
@@ -50,6 +51,15 @@ def training_main(model_name, model, training_data, Threshold= None):
 
     print('模型 %s在验证集上的性能指标为: 准确率- %.8f, 召回率- %.8f, F1指标- %.8f' %
           (model_name, precision_rate, recall_rate, F1_rate))
+
+def demention(t_sne, dataset):
+    '''
+    对数据进行可视化
+    :param t_sne: t-SNE降维类型
+    :param dataset: 待可视化数据集
+    :return: None
+    '''
+
 
 if __name__ == '__main__':
     training_main()

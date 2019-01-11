@@ -15,11 +15,13 @@ from sklearn.ensemble import AdaBoostClassifier
 from sklearn.tree import DecisionTreeClassifier
 import xgboost as xgb
 from xgboost import XGBClassifier
+from sklearn import manifold
 
 #测试代码需要
 import numpy as np
-from sklearn.datasets import load_iris
+from sklearn.datasets import load_iris, load_digits
 from sklearn.model_selection import train_test_split
+from matplotlib import pyplot as plt
 
 class MultiClassifiers:
     __slots__ = ('__dataset')
@@ -123,9 +125,79 @@ class MultiClassifiers:
 
         return xgbc
 
+def t_SNE(n_components, perplexity= 30.0, early_exaggeration= 12, learning_rate= 200, n_iter= 1000,
+          min_grad_norm= 1e-7, init= 'pca', verbose= 0, method= 'barnes_hut', angle= 0.5):
+    '''
+    t-SNE降维可视化
+    :param n_components: 嵌入空间的维度
+    :param perpexity: 混乱度，表示t-SNE优化过程中考虑邻近点的多少，默认为30，建议取值在5到50之间
+    :param early_exaggeration: 表示嵌入空间簇间距的大小，默认为12，该值越大，可视化后的簇间距越大
+    :param learning_rate: 学习率，表示梯度下降的快慢，默认为200，建议取值在10到1000之间
+    :param n_iter: 迭代次数，默认为1000，自定义设置时应保证大于250
+    :param min_grad_norm: 如果梯度小于该值，则停止优化。默认为1e-7
+    :param init: 初始化，默认为random。取值为random为随机初始化，取值为pca为利用PCA进行初始化（常用），
+    取值为numpy数组时必须shape=(n_samples, n_components)
+    :param verbose: 是否打印优化信息，取值0或1，默认为0=>不打印信息。打印的信息为：近邻点数量、耗时、σ、KL散度、误差等
+    :param method: 两种优化方法：barnets_hut和exact。第一种耗时O(NlogN)，第二种耗时O(N^2)但是误差小，
+    同时第二种方法不能用于百万级样本
+    :param angle: 当method=barnets_hut时，该参数有用，用于均衡效率与误差，默认值为0.5，该值越大，效率越高&误差越大，
+    否则反之。当该值在0.2-0.8之间时，无变化。
+    :return: t-SNE类
+    '''
+    tsne = manifold.TSNE(
+        n_components= n_components,
+        perplexity= perplexity,
+        early_exaggeration= early_exaggeration,
+        learning_rate= learning_rate,
+        n_iter= n_iter,
+        min_grad_norm= min_grad_norm,
+        init= init,
+        verbose= verbose,
+        random_state= 32,
+        method= method,
+        angle= angle
+    )
+    return tsne
+
 if __name__ == '__main__':
-    dataset = np.arange(50)
-    multiclassifier = MultiClassifiers(dataset= dataset)
+    # dataset = np.arange(50)
+    # multiclassifier = MultiClassifiers(dataset= dataset)
+    digits = load_digits(n_class= 10)
+    x, y = digits.data, digits.target
+    #初始化image, image_h矩阵
+    image = np.zeros(shape= (8, 8))
+    image_h = np.zeros(shape= (8, 8*20))
+    num = 0
+    for i in range(20):
+        for j in range(20):
+            image = digits.images[num] if image.any() == 0 else np.hstack((image, digits.images[num]))
+            num += 1
+        # print(image.shape, image_h.shape)
+        image_h = image if image_h.any() == 0 else np.vstack((image_h, image))
+        image = np.zeros(shape= (8, 8))
+
+    # print(x.shape, y.shape)
+    # print(type(digits.images[0]))
+    figure = plt.figure()
+    plt.imshow(image_h, cmap=plt.cm.binary)
+    # figure_1 = plt.figure()
+    # plt.imshow(digits.images[2], cmap=plt.cm.binary)
+    # plt.show()
+
+    tsne = manifold.TSNE(n_components=2, init='pca', random_state=501)
+    X_tsne = tsne.fit_transform(x)
+    print(X_tsne.shape)
+    x_min, x_max = X_tsne.min(0), X_tsne.max(0)
+    X_norm = (X_tsne - x_min) / (x_max - x_min)  # 归一化
+    plt.figure(figsize=(8, 8))
+    for i in range(X_norm.shape[0]):
+        plt.text(X_norm[i, 0], X_norm[i, 1], str(y[i]), color=plt.cm.Set1(y[i]),
+                 fontdict={'weight': 'bold', 'size': 9})
+    plt.xticks([])
+    plt.yticks([])
+    plt.show()
+
+
 
 
 
