@@ -59,7 +59,7 @@ def demention(t_sne, dataset):
     :param dataset: 待可视化数据集
     :return: None
     '''
-
+    pass
 
 if __name__ == '__main__':
     training_main()
