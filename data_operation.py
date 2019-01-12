@@ -12,6 +12,7 @@
 import numpy as np
 import scipy as sci
 from scipy import stats
+import pandas as pd
 from scipy.integrate import quad
 import pickle
 import os
@@ -27,32 +28,49 @@ def SaveFile(data, savepickle_p):
         with open(savepickle_p, 'wb') as file:
             pickle.dump(data, file)
 
-def EquilibriumDenoising(p_former):
+def EquilibriumDenoising(p_former, class_num):
     '''
     对数据进行均衡截取、去噪
     :param p_former: 数据目录前缀
+    :param class_num: 需要处理的模式类别
     :return: 经过均衡化、去噪后的数据集
     '''
-
     # data为4类数据经过数据均衡、去噪后的矩阵
-    data = np.zeros(shape=[125050 * 4, 11])  # 如果制作5000个shape= [62550*4, 11], 10000个shape= [125050*4, 11]
-    for num in range(3, 7):
-        # p = r'F:\GraduateDesigning\ICT DataSet\Label_%s.txt' % num
-        p = p_former + r'\\' + r'ICT DataSet\Label_%s.txt' % num
-        with open(p, 'r') as file:
-            print('正在处理第%d个模型' % num)
-            sub_data = np.loadtxt(file, delimiter=',', skiprows=0)[:200000, :]  # 如果制作5000时取100000, 10000时取200000
-            i = 0
-            while i < sub_data.shape[0]:
-                if sub_data[i, :].any() == 0 or sub_data[i, -2] < 0:
-                    sub_data = np.delete(sub_data, i, axis=0)
-                else:
-                    i += 1
-                    print(i)
-            sub_data = np.delete(sub_data, [3, 4, 5], axis=1)
-            data = sub_data[:125051, :] if data.any() == 0 else np.vstack(
-                (data, sub_data[:125051, :]))  # 如果制作5000时取62551, 10000时取125051
+    # data = np.zeros(shape=[125050 * 4, 11])  # 如果制作5000个shape= [62550*4, 11], 10000个shape= [125050*4, 11]
+    # for num in range(3, 7):
+    #     # p = r'F:\GraduateDesigning\ICT DataSet\Label_%s.txt' % num
+    #     p = p_former + r'\\' + r'ICT DataSet\Label_%s.txt' % num
+    #     with open(p, 'r') as file:
+    #         print('正在处理第%d个模型' % num)
+    #         sub_data = np.loadtxt(file, delimiter=',', skiprows=0)[:200000, :]  # 如果制作5000时取100000, 10000时取200000
+    #         i = 0
+    #         while i < sub_data.shape[0]:
+    #             if sub_data[i, :].any() == 0 or sub_data[i, -2] < 0:
+    #                 sub_data = np.delete(sub_data, i, axis=0)
+    #             else:
+    #                 i += 1
+    #                 print(i)
+    #         sub_data = np.delete(sub_data, [3, 4, 5], axis=1)
+    #         data = sub_data[:125051, :] if data.any() == 0 else np.vstack(
+    #             (data, sub_data[:125051, :]))  # 如果制作5000时取62551, 10000时取125051
+    p = p_former + r'\\' + r'ICT DataSet\Label_%s.txt' % class_num
+    with open(p, 'r') as file:
+        print('正在处理第%s个模型数据' % class_num)
+        #截取数据,数据标签不对所以去掉最后一列
+        tru_data = np.loadtxt(file, delimiter=',', skiprows=0)[:100000, :]  # 如果制作5000时取100000, 10000时取200000
+        data_frame = pd.DataFrame(tru_data[:, :-1], columns= ['acc_x', 'acc_y', 'acc_z', 'lin_acc_x', 'lin_acc_y', 'lin_acc_z',
+                                            'gyr_x', 'gyr_y', 'gyr_z', 'mag_x', 'mag_y', 'mag_z', 'pre'])
 
+        data_frame = data_frame.drop(columns=['lin_acc_x', 'lin_acc_y', 'lin_acc_z'])
+
+        data_frame = data_frame[(~data_frame['acc_x'].isin([0])) & (~data_frame['acc_y'].isin([0])) & ((~data_frame['acc_z'].isin([0])))\
+            & (~data_frame['gyr_x'].isin([0])) & (~data_frame['gyr_y'].isin([0])) & (~data_frame['gyr_z'].isin([0])) &
+                                (~data_frame['mag_x'].isin([0])) & (~data_frame['mag_y'].isin([0])) & (~data_frame['mag_z'].isin([0]))]
+
+        data_frame = data_frame.loc[data_frame['pre'] >= 0]
+        #DataFrame类转ndarray类矩阵
+        data = np.array(data_frame)[:62550, :] #62550个数据
+        data = np.hstack((data, np.ones(shape= (data.shape[0], 1)) * class_num))
     return data
 
 def LoadFile(p):
@@ -130,7 +148,7 @@ def Acc_h(a, v):
     p = ((d * v) / (v * v)) * v
     #d在水平方向上的分量
     h = d - p
-    return h
+    return h, p
 
 def GravityEstimate(acc_data, Gest, w_g, Thvar_ori, var_Thr, inc):
     '''
@@ -185,8 +203,11 @@ def matrix_operation(data):
     return np.hstack((dataset, data[:, -1][np.newaxis, :]))
 
 if __name__ == '__main__':
-    data = EquilibriumDenoising(p_former=r'F:\GraduateDesigning')
-    print(data)
+    data = EquilibriumDenoising(p_former=r'D:\GraduateDesigning', class_num= 2)
+    dataframe = pd.DataFrame(data= data, index= list(range(1,62551)), columns= ['acc_x', 'acc_y', 'acc_z', 'gyr_x', 'gyr_y', 'gyr_z',
+                                           'mag_x', 'mag_y', 'mag_z', 'pre', 'mode_num'])
+    print(dataframe)
+    print(data.shape)
     # SaveFile(data, savepickle_p= r'F:\GraduateDesigning\data_10000.pickle') #5000/10000
 
 
