@@ -137,9 +137,9 @@ class StatisticStack:
 def Acc_h(a, v):
     '''
     计算出去除重力加速度和在重力加速度方向上分量后的水平加速度
-    :param a: 加速度计测量的三维加速度坐标
-    :param v: 估算出来的三维重力加速度
-    :return: 水平加速度
+    :param a: 加速度计测量的三维加速度坐标(ax, ay, az)
+    :param v: 估算出来的三维重力加速度(g, g, g)
+    :return: 水平加速度, 竖直加速度
     '''
 
     #去除重力加速度后的加速度
@@ -150,35 +150,41 @@ def Acc_h(a, v):
     h = d - p
     return h, p
 
-def GravityEstimate(acc_data, Gest, w_g, Thvar_ori, var_Thr, inc):
+def GravityEstimate(origin, series, series_finally):
     '''
-    估计重力加速度在三个坐标轴上的数值
-    :param acc_data: 重力加速度矩阵, shape= (len_window*4, 3) #考虑到任何分量都大于w_g
-    :param Gest: 重力加速度初始值, shape= (gx, gy, gz)
-    :param w_g: 窗内加速度均值和重力加速度之差的阈值
-    :param Thvar_ori: 窗内加速度方差阈值
-    :param var_Thr: 方差条件阈值
-    :param inc: inc数值
-    :return: 三个方向的重力加速度值, shape= (vx, vy, vz)
+    估计重力加速度的数值
+    :param origin: 初始值(tuple),第一次为(Gest= 9.8, VarIncrease= 0.35, THvar= 1.0)，移动窗过程中每次都使用上一次窗口内最终得到的三值列表
+    :param series: 窗口内序列，shape=(100, 3)
+    :param series_finally: 扩大窗口长度为原来的4倍后的窗口内数据，shape=(400, 3)
+    :return: 三个方向的重力加速度值,tuple类型， shape= (g, g, g)
     '''
+    #不变量
+    SubNorm = 4
+    OriginTHvar = 1.0
+    hardThreshold = 1.5
+    inc = 0.3
+    #origin解析
+    Gest, VarIncrease, THvar = origin
+    #计算每帧加速度矢量和
+    acc = np.sum(series**2, axis= 1) #shape= (100,)
     #计算窗内各个轴上加速度均值和方差
-    W_mean = np.mean(acc_data[:int(acc_data.shape[0]/4), :], axis= 1)
-    W_var = np.var(acc_data[:int(acc_data.shape[0]/4), :], axis= 1)
+    W_mean = np.mean(acc)
+    W_var = np.var(acc)
     #如果滑动窗口内的加速度均值和估计的重力加速度相差较大，则复位方差阈值
-    if (W_mean - Gest).any() >= w_g:
-        THvar = Thvar_ori #bug 改！
-    if W_var.any() < 1.5:
-        if W_var.any() < THvar:
+    if np.abs(W_mean - Gest) >= SubNorm:
+        THvar = OriginTHvar
+    if W_var < hardThreshold:
+        if W_var < THvar:
             Gest = W_mean
             THvar = (W_var + THvar) / 2
             VarIncrease = THvar * inc
         else:
             THvar = THvar + VarIncrease
     else:
-        Gest = np.mean(acc_data, axis= 1)
-    return Gest
-
-
+        acc_finally = np.sum(series_finally ** 2, axis=1)  # shape= (400,)
+        Gest = np.mean(acc_finally)
+    origin_new = [Gest, VarIncrease, THvar]
+    return tuple(origin_new)
 
 def matrix_operation(data):
     '''
@@ -203,12 +209,17 @@ def matrix_operation(data):
     return np.hstack((dataset, data[:, -1][np.newaxis, :]))
 
 if __name__ == '__main__':
-    data = EquilibriumDenoising(p_former=r'D:\GraduateDesigning', class_num= 2)
-    dataframe = pd.DataFrame(data= data, index= list(range(1,62551)), columns= ['acc_x', 'acc_y', 'acc_z', 'gyr_x', 'gyr_y', 'gyr_z',
-                                           'mag_x', 'mag_y', 'mag_z', 'pre', 'mode_num'])
-    print(dataframe)
-    print(data.shape)
-    # SaveFile(data, savepickle_p= r'F:\GraduateDesigning\data_10000.pickle') #5000/10000
+    #生成均衡和去噪后数据
+    # for i in range(3, 7):
+    #     data = EquilibriumDenoising(p_former=r'D:\GraduateDesigning', class_num=i)
+    #     dataframe = pd.DataFrame(data=data, index=list(range(1, 62551)),
+    #                              columns=['acc_x', 'acc_y', 'acc_z', 'gyr_x', 'gyr_y', 'gyr_z',
+    #                                       'mag_x', 'mag_y', 'mag_z', 'pre', 'mode_num'])
+    #     print(dataframe)
+    #     print(data.shape)
+    #     SaveFile(data, savepickle_p=r'D:\GraduateDesigning\c_%s.pickle' % i)
+    GravityEstimate()
+
 
 
 
