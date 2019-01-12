@@ -19,11 +19,11 @@ import os
 
 def SaveFile(data, savepickle_p):
     '''
-    存储整理好的数据'
+    存储整理好的数据
     :param data: 待存储数据
     :param savepickle_p: pickle后缀文件存储绝对路径
     :return: None
-    '''''
+    '''
     if not os.path.exists(savepickle_p):
         with open(savepickle_p, 'wb') as file:
             pickle.dump(data, file)
@@ -74,7 +74,11 @@ def EquilibriumDenoising(p_former, class_num):
     return data
 
 def LoadFile(p):
-    '''读取文件'''
+    '''
+    读取文件
+    :param p: 数据集绝对路径
+    :return: 数据集
+    '''
     data = np.array([0])
     try:
         with open(p, 'rb') as file:
@@ -134,22 +138,6 @@ class StatisticStack:
                          self.__interquartile_range, self.__kurtosis, self.__skewness, self.__integral, self.__auto_corr,
                          self.__mean_cross_rate, self.__spectral_energy])
 
-def Acc_h(a, v):
-    '''
-    计算出去除重力加速度和在重力加速度方向上分量后的水平加速度
-    :param a: 加速度计测量的三维加速度坐标(ax, ay, az)
-    :param v: 估算出来的三维重力加速度(g, g, g)
-    :return: 水平加速度, 竖直加速度
-    '''
-
-    #去除重力加速度后的加速度
-    d = a - v
-    #d在重力加速度方向上的分量
-    p = ((d * v) / (v * v)) * v
-    #d在水平方向上的分量
-    h = d - p
-    return h, p
-
 def GravityEstimate(origin, series, series_finally):
     '''
     估计重力加速度的数值
@@ -186,15 +174,34 @@ def GravityEstimate(origin, series, series_finally):
     origin_new = [Gest, VarIncrease, THvar]
     return tuple(origin_new)
 
+
+def Acc_h(a, v):
+    '''
+    计算出去除重力加速度和在重力加速度方向上分量后的水平加速度
+    :param a: 加速度计测量的三维加速度坐标(ax, ay, az)
+    :param v: 估算出来的三维重力加速度g
+    :return: 水平加速度, 竖直加速度
+    '''
+    #v变为3维
+    v = np.array([v, v, v])
+    #去除重力加速度后的加速度
+    d = a - v #a.shape=(5000/10000, 3), v.shape=(3,)
+    #d在重力加速度方向上的分量
+    p = ((d * v) / (v * v)) * v
+    #d在水平方向上的分量
+    h = d - p
+    return h, p
+
 def matrix_operation(data):
     '''
     对进行处理后的数据集进行滑动窗口特征计算，并生成数据矩阵
-    :param data: 待处理数据,shape= (5000/10000, 9+1)
+    :param data: 待处理数据,shape= (5000/10000, 8+1)
     :return: 数据矩阵
     '''
-    dataset = np.zeros(shape= (1, 9*14)) #此处9*14需要修改为9*每列具有的所有特征数（统计+时域+频域）总和
-    feature_dataset = np.zeros(shape= (1, 14)) #此处14需要修改为每列具有的所有特征数（统计+时域+频域）总和
+    dataset = np.zeros(shape= (1, 8*14)) #此处8*14需要修改为8*每列具有的所有特征数（统计+时域+频域）总和
+
     for i in range(0, data.shape[0], 50):
+        feature_dataset = np.zeros(shape=(1, 14))  # 此处14需要修改为每列具有的所有特征数（统计+时域+频域）总和
         #因为data最后一列为标签
         for j in range(data.shape[-1]-1):
             statisticstack = StatisticStack(data[i:i+100, j])
@@ -203,10 +210,35 @@ def matrix_operation(data):
                 np.hstack((feature_dataset, feature_stack[np.newaxis, :]))
 
         dataset = feature_dataset if dataset.any() == 0 else np.vstack((dataset, feature_dataset))
-        feature_dataset = np.zeros(shape= (1, 14))
 
     #将特征矩阵和标签向量进行组合并返回
     return np.hstack((dataset, data[:, -1][np.newaxis, :]))
+
+def data_main(path):
+    '''
+    数据处理主函数
+    :param path: 其中一个交通模式数据集的绝对路径
+    :return: None
+    '''
+    #导入一种交通模式经过去噪、均衡化后的数据集
+    pri_data = LoadFile(path)
+    #切出前三列进行去除重力
+    pri_acc = pri_data[:3, :]
+    # 初始化参数元组(在每一次窗口滑动到新位置时会迭代更新)
+    origin = tuple([9.8, 0.35, 1.0])
+    for i in range(0, pri_acc.shape[0], 50): #半窗覆盖
+        #切出shape=(100, 3)矩阵
+        series = pri_acc[i:i+100, :]
+        #切出4倍窗长度矩阵
+        interval_former = (i - 200) if i >= 200 else (i - 0)
+        interval_latter = interval_former + 400
+        series_finally = pri_acc[interval_former:interval_latter, :]
+        origin = GravityEstimate(origin= origin, series= series, series_finally= series_finally)
+    #分解加速度为水平、竖直分量
+    h, p = Acc_h(pri_acc, origin[0])
+    data = np.hstack
+
+
 
 if __name__ == '__main__':
     #生成均衡和去噪后数据
