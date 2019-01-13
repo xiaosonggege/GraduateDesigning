@@ -189,7 +189,7 @@ def Acc_h(a, g):
     #d在重力加速度方向上的分量
     p = np.matmul(d, g[:, np.newaxis]) / np.matmul(g, g[:, np.newaxis]) #shape= (100, 1)
     #d在水平方向上的分量
-    h = d - (p * g[np.newaxis, :]) #shape= (100, 3)
+    h = d - (p * g[np.newaxis, :]) #shape= (100,1)*(1,3) = (100, 3)
     h_magnitude = np.sqrt(np.sum(h**2, axis= 1)) #shape= (100,)
     h_p = np.hstack((h_magnitude[:, np.newaxis], p))  # shape= (100, 2)
     return h_p[:50, :]
