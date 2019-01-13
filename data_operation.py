@@ -15,6 +15,7 @@ from scipy import stats
 import pandas as pd
 import pickle
 import os
+import multiprocessing
 
 def SaveFile(data, savepickle_p):
     '''
@@ -125,7 +126,7 @@ class StatisticStack:
         self.__auto_corr = stats.pearsonr(self.__time_series, self.__time_series)[0]
         self.__mean_cross_rate = np.sum(np.where(self.__time_series > self.__mean, 1, 0)) / \
             np.sum(self.__time_series)
-        self.__spectral_energy = np.sum(StatisticStack.fft(self.__time_series)**2)
+        self.__spectral_energy = np.sum(np.abs(StatisticStack.fft(self.__time_series))**2)
 
     def feature_stack(self):
         '''
@@ -216,10 +217,11 @@ def matrix_operation(data):
     # print(dataset.shape, data.shape)
     return np.hstack((dataset, data[:dataset.shape[0], -1][:, np.newaxis]))
 
-def data_main(path):
+def data_main(path, num):
     '''
     数据处理主函数
     :param path: 其中一个交通模式数据集的绝对路径
+    :param num: 需要处理的类别编号
     :return: None
     '''
     #导入一种交通模式经过去噪、均衡化后的数据集
@@ -250,23 +252,25 @@ def data_main(path):
     # print(data)
     # 特征提取、组合标签得到最终待训练数据集
     data_finally = matrix_operation(data)
-    print(data_finally)
+    SaveFile(data= data_finally, savepickle_p= r'F:\GraduateDesigning\c_%s_finallydata.pickle' % num)
+    # print(data_finally)
     print(data_finally.shape)
 
 
 if __name__ == '__main__':
     #生成均衡和去噪后数据
     # for i in range(3, 7):
-    #     data = EquilibriumDenoising(p_former=r'D:\GraduateDesigning', class_num=i)
+    #     data = EquilibriumDenoising(p_former=r'F:\GraduateDesigning', class_num=i)
     #     # dataframe = pd.DataFrame(data=data, index=list(range(1, 62551)),
     #     #                          columns=['acc_x', 'acc_y', 'acc_z', 'gyr_x', 'gyr_y', 'gyr_z',
     #     #                                   'mag_x', 'mag_y', 'mag_z', 'pre', 'mode_num'])
     #     # print(dataframe)
     #     # print(data.shape)
-    #     SaveFile(data, savepickle_p=r'D:\GraduateDesigning\c_%s.pickle' % i)
-    data_main(path= r'D:\GraduateDesigning\c_3.pickle')
-
-
+    #     SaveFile(data, savepickle_p=r'F:\GraduateDesigning\c_%s.pickle' % i)
+    # for i in range(3, 7):
+    #     data_main(path= r'F:\GraduateDesigning\c_%s.pickle' % i, num= i)
+    data = LoadFile(p= r'F:\GraduateDesigning\c_3.pickle')
+    print(data)
 
 
 
