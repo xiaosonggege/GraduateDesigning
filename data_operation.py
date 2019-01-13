@@ -28,6 +28,21 @@ def SaveFile(data, savepickle_p):
         with open(savepickle_p, 'wb') as file:
             pickle.dump(data, file)
 
+def LoadFile(p):
+    '''
+    读取文件
+    :param p: 数据集绝对路径
+    :return: 数据集
+    '''
+    data = np.array([0])
+    try:
+        with open(p, 'rb') as file:
+            data = pickle.load(file)
+    except:
+        print('文件不存在!')
+    finally:
+        return data
+
 def EquilibriumDenoising(p_former, class_num):
     '''
     对数据进行均衡截取、去噪
@@ -72,21 +87,6 @@ def EquilibriumDenoising(p_former, class_num):
         data = np.array(data_frame)[:62550, :] #62550个数据
         data = np.hstack((data, np.ones(shape= (data.shape[0], 1)) * class_num))
     return data
-
-def LoadFile(p):
-    '''
-    读取文件
-    :param p: 数据集绝对路径
-    :return: 数据集
-    '''
-    data = np.array([0])
-    try:
-        with open(p, 'rb') as file:
-            data = pickle.load(file)
-    except:
-        print('文件不存在!')
-    finally:
-        return data
 
 class StatisticStack:
     '''
@@ -176,7 +176,6 @@ def GravityEstimate(origin, series, series_finally):
     origin_new = [Gest, VarIncrease, THvar]
     return tuple(origin_new) #其中Gest=(gx, gy, gz)
 
-
 def Acc_h(a, g):
     '''
     计算出去除重力加速度和在重力加速度方向上分量后的水平加速度
@@ -184,15 +183,14 @@ def Acc_h(a, g):
     :param g: 估算出来的三维重力加速度g
     :return: ndarray, (h_magnitude, p)
     '''
-
     #去除重力加速度后的加速度
-    d = a - g #a.shape=(5000/10000, 3), g.shape=(3,)
+    d = a - g #a.shape=(62550, 3), g.shape=(3,)
     #d在重力加速度方向上的分量
-    p = np.matmul(d, g[:, np.newaxis]) / np.matmul(g, g[:, np.newaxis]) #shape= (5000, 1)
+    p = np.matmul(d, g[:, np.newaxis]) / np.matmul(g, g[:, np.newaxis]) #shape= (62550, 1)
     #d在水平方向上的分量
-    h = d - p * g[np.newaxis, :] #shape= (5000, 3)
-    h_magnitude = np.sqrt(np.sum(h**2, axis= 1)) #shape= (5000, 1)
-    return np.hstack((h_magnitude, p))
+    h = d - (p * g[np.newaxis, :]) #shape= (62550, 3)
+    h_magnitude = np.sqrt(np.sum(h**2, axis= 1)) #shape= (62550,)
+    return np.hstack((h_magnitude[:, np.newaxis], p))
 
 def matrix_operation(data):
     '''
@@ -225,24 +223,26 @@ def data_main(path):
     #导入一种交通模式经过去噪、均衡化后的数据集
     pri_data = LoadFile(path)
     #切出前三列进行去除重力
-    pri_acc = pri_data[:3, :]
+    pri_acc = pri_data[:, :3]
     # 初始化参数元组(在每一次窗口滑动到新位置时会迭代更新)
     origin = tuple([9.8, 0.35, 1.0])
     for i in range(0, pri_acc.shape[0]-100, 50): #防止越界
         #切出shape=(100, 3)矩阵
         series = pri_acc[i:i+100, :]
         #切出4倍窗长度矩阵
-        interval_former = (i - 200) if i >= 200 else (i - 0)
+        interval_former = (i - 200) if i >= 200 else 0
         interval_latter = interval_former + 400
         series_finally = pri_acc[interval_former:interval_latter, :]
         #除了窗口在起始位置外都需要将重力加速度估计值转化为模值
         origin = tuple([np.sqrt(np.sum(origin[0]**2)), origin[1], origin[-1]]) if i else origin
         origin = GravityEstimate(origin= origin, series= series, series_finally= series_finally)
     #分解加速度为水平、竖直分量
-    h, p = Acc_h(pri_acc, origin[0])
-    data = np.hstack
-
-
+    h_p = Acc_h(pri_acc, origin[0])
+    data = np.hstack((h_p, pri_data[:, 3:])) #组合替换加速度
+    # print(data)
+    #特征提取、组合标签得到最终待训练数据集
+    data_finally = matrix_operation(data)
+    print(data_finally)
 
 if __name__ == '__main__':
     #生成均衡和去噪后数据
@@ -254,7 +254,7 @@ if __name__ == '__main__':
     #     print(dataframe)
     #     print(data.shape)
     #     SaveFile(data, savepickle_p=r'D:\GraduateDesigning\c_%s.pickle' % i)
-    GravityEstimate()
+    data_main(path= r'D:\GraduateDesigning\c_3.pickle')
 
 
 
