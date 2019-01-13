@@ -247,8 +247,8 @@ def data_main(path, num):
         origin = GravityEstimate(origin= origin, series= series, series_finally= series_finally)
         # 分解加速度为水平、竖直分量
         h_p = Acc_h(series, origin[0]) if h_p.any() == 0 else np.vstack((h_p, Acc_h(series, origin[0])))
-    # print(h_p.shape)
-    data = np.hstack((h_p, pri_data[:, 3:]))  # 组合替换加速度,去掉pri_data后50个数据
+    print(h_p.shape)
+    data = np.hstack((h_p, pri_data[:62550, 3:]))  # 组合替换加速度,去掉pri_data后50个数据
     # print(data)
     # 特征提取、组合标签得到最终待训练数据集
     data_finally = matrix_operation(data)
