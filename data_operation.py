@@ -202,7 +202,7 @@ def matrix_operation(data):
     '''
     dataset = np.zeros(shape= (1, 8*14)) #此处8*14需要修改为8*每列具有的所有特征数（统计+时域+频域）总和
 
-    for i in range(0, data.shape[0]-100, 50): #防止越界
+    for i in range(0, data.shape[0]-50, 50): #防止越界
         feature_dataset = np.zeros(shape=(1, 14))  # 此处14需要修改为每列具有的所有特征数（统计+时域+频域）总和
         #因为data最后一列为标签
         for j in range(data.shape[-1]-1):
@@ -233,16 +233,16 @@ def data_main(path, num):
     #初始化水平、竖直加速度分解矩阵
     h_p = np.zeros(shape= (100, 2))
     #每个窗口内的每帧三个维度加速度分量分别去除重力、分解水平、竖直
-    for i in range(0, pri_acc.shape[0], 50): #防止越界
+    for i in range(0, pri_acc.shape[0]-50, 50): #防止越界
         #切出shape=(100, 3)矩阵
         series = pri_acc[i:i+100, :]
         #切出4倍窗长度矩阵
         if i <= (pri_acc.shape[0] - 200):
             interval_former = (i - 200) if i >= 200 else 0
             interval_latter = interval_former + 400
-        else:
+        else: #数据集必须大于400个！
             interval_latter = pri_acc.shape[0]
-            interval_former = interval_latter - 401
+            interval_former = interval_latter - 400
         series_finally = pri_acc[interval_former:interval_latter, :]
         origin = GravityEstimate(origin= origin, series= series, series_finally= series_finally)
         # 分解加速度为水平、竖直分量
@@ -254,7 +254,7 @@ def data_main(path, num):
     data_finally = matrix_operation(data)
     SaveFile(data= data_finally, savepickle_p= r'F:\GraduateDesigning\c_%s_finallydata.pickle' % num)
     # print(data_finally)
-    print(data_finally.shape)
+    # print(data_finally.shape)
 
 
 if __name__ == '__main__':
@@ -267,10 +267,10 @@ if __name__ == '__main__':
     #     # print(dataframe)
     #     # print(data.shape)
     #     SaveFile(data, savepickle_p=r'F:\GraduateDesigning\c_%s.pickle' % i)
-    # for i in range(3, 7):
-    #     data_main(path= r'F:\GraduateDesigning\c_%s.pickle' % i, num= i)
-    data = LoadFile(p= r'F:\GraduateDesigning\c_3.pickle')
-    print(data)
+    for i in range(3, 7):
+        data_main(path= r'F:\GraduateDesigning\c_%s.pickle' % i, num= i)
+    # data = LoadFile(p= r'F:\GraduateDesigning\c_3.pickle')
+    # print(data)
 
 
 
