@@ -13,7 +13,6 @@ import numpy as np
 import scipy as sci
 from scipy import stats
 import pandas as pd
-from scipy.integrate import quad
 import pickle
 import os
 
@@ -84,7 +83,7 @@ def EquilibriumDenoising(p_former, class_num):
 
         data_frame = data_frame.loc[data_frame['pre'] >= 0]
         #DataFrame类转ndarray类矩阵
-        data = np.array(data_frame)[:62550, :] #62550个数据
+        data = np.array(data_frame)[:62600, :] #62600个数据,多取50个
         data = np.hstack((data, np.ones(shape= (data.shape[0], 1)) * class_num))
     return data
 
@@ -122,12 +121,11 @@ class StatisticStack:
             np.quantile(self.__time_series, 0.25)
         self.__kurtosis = stats.kurtosis(self.__time_series)
         self.__skewness = stats.skew(self.__time_series)
-        self.__integral = quad(lambda x: x, self.__time_series[0], self.__time_series[-1])
+        self.__integral = np.sum(self.__time_series)
         self.__auto_corr = stats.pearsonr(self.__time_series, self.__time_series)[0]
         self.__mean_cross_rate = np.sum(np.where(self.__time_series > self.__mean, 1, 0)) / \
             np.sum(self.__time_series)
-        self.__spectral_energy = quad(StatisticStack.fft(time_series), StatisticStack.fft(self.__time_series)[0],
-                                      StatisticStack.fft(self.__time_series)[-1])
+        self.__spectral_energy = np.sum(StatisticStack.fft(self.__time_series)**2)
 
     def feature_stack(self):
         '''
@@ -141,7 +139,7 @@ class StatisticStack:
 def GravityEstimate(origin, series, series_finally):
     '''
     估计重力加速度的数值
-    :param origin: 初始值(tuple),第一次为(Gest= 9.8, VarIncrease= 0.35, THvar= 1.0)，移动窗过程中每次都使用上一次窗口内最终得到的三值列表
+    :param origin: 初始值(tuple),第一次为(Gest= np.array([-2.3, 3.9, 8.8]), VarIncrease= 0.35, THvar= 1.0)，移动窗过程中每次都使用上一次窗口内最终得到的三值列表
     :param series: 窗口内序列，shape=(100, 3)
     :param series_finally: 扩大窗口长度为原来的4倍后的窗口内数据，shape=(400, 3)
     :return: 更新后的origin元组，其中Gest= (gx, gy, gz)
@@ -155,17 +153,18 @@ def GravityEstimate(origin, series, series_finally):
     Gest, VarIncrease, THvar = origin
     #计算窗内加速度合矢量均值和方差
     W_mean = np.mean(series, axis= 0) #shape=(3,)
-    #计算窗口内平均值的模值
+    #计算窗口内平均值的模值,重力加速度矢量模值
     W_mean_model = np.sqrt(np.sum(W_mean ** 2))
+    Gest_model = np.sqrt(np.sum(Gest**2))
     # 计算每帧加速度矢量和
     acc_model = np.sqrt(np.sum(series**2, axis= 1)) #shape= (100,)
     W_var = np.var(acc_model)
     #如果滑动窗口内的加速度均值和估计的重力加速度相差较大，则复位方差阈值
-    if np.abs(W_mean_model - Gest) >= SubNorm:
+    if np.abs(W_mean_model - Gest_model) >= SubNorm:
         THvar = OriginTHvar
     if W_var < hardThreshold:
         if W_var < THvar:
-            Gest = W_mean
+            Gest = W_mean #shape= (3,)
             THvar = (W_var + THvar) / 2
             VarIncrease = THvar * inc
         else:
@@ -184,18 +183,20 @@ def Acc_h(a, g):
     :return: ndarray, (h_magnitude, p)
     '''
     #去除重力加速度后的加速度
-    d = a - g #a.shape=(62550, 3), g.shape=(3,)
+    d = a - g #a.shape=(100, 3), g.shape=(3,)
+    # print(g.shape)
     #d在重力加速度方向上的分量
-    p = np.matmul(d, g[:, np.newaxis]) / np.matmul(g, g[:, np.newaxis]) #shape= (62550, 1)
+    p = np.matmul(d, g[:, np.newaxis]) / np.matmul(g, g[:, np.newaxis]) #shape= (100, 1)
     #d在水平方向上的分量
-    h = d - (p * g[np.newaxis, :]) #shape= (62550, 3)
-    h_magnitude = np.sqrt(np.sum(h**2, axis= 1)) #shape= (62550,)
-    return np.hstack((h_magnitude[:, np.newaxis], p))
+    h = d - (p * g[np.newaxis, :]) #shape= (100, 3)
+    h_magnitude = np.sqrt(np.sum(h**2, axis= 1)) #shape= (100,)
+    h_p = np.hstack((h_magnitude[:, np.newaxis], p))  # shape= (100, 2)
+    return h_p[:50, :]
 
 def matrix_operation(data):
     '''
     对进行处理后的数据集进行滑动窗口特征计算，并生成数据矩阵
-    :param data: 待处理数据,shape= (5000/10000, 8+1)
+    :param data: 待处理数据,shape= (62550, 8+1)
     :return: 数据矩阵
     '''
     dataset = np.zeros(shape= (1, 8*14)) #此处8*14需要修改为8*每列具有的所有特征数（统计+时域+频域）总和
@@ -205,14 +206,15 @@ def matrix_operation(data):
         #因为data最后一列为标签
         for j in range(data.shape[-1]-1):
             statisticstack = StatisticStack(data[i:i+100, j])
-            feature_stack = statisticstack.feature_stack()
+            feature_stack = statisticstack.feature_stack()[np.newaxis, :]
             feature_dataset = feature_stack if feature_dataset.any() == 0 else \
-                np.hstack((feature_dataset, feature_stack[np.newaxis, :]))
+                np.hstack((feature_dataset, feature_stack))
 
         dataset = feature_dataset if dataset.any() == 0 else np.vstack((dataset, feature_dataset))
 
     #将特征矩阵和标签向量进行组合并返回
-    return np.hstack((dataset, data[:, -1][np.newaxis, :]))
+    # print(dataset.shape, data.shape)
+    return np.hstack((dataset, data[:dataset.shape[0], -1][:, np.newaxis]))
 
 def data_main(path):
     '''
@@ -225,34 +227,42 @@ def data_main(path):
     #切出前三列进行去除重力
     pri_acc = pri_data[:, :3]
     # 初始化参数元组(在每一次窗口滑动到新位置时会迭代更新)
-    origin = tuple([9.8, 0.35, 1.0])
-    for i in range(0, pri_acc.shape[0]-100, 50): #防止越界
+    origin = tuple([np.array([-2.3, 3.9, 8.8]), 0.35, 1.0])
+    #初始化水平、竖直加速度分解矩阵
+    h_p = np.zeros(shape= (100, 2))
+    #每个窗口内的每帧三个维度加速度分量分别去除重力、分解水平、竖直
+    for i in range(0, pri_acc.shape[0], 50): #防止越界
         #切出shape=(100, 3)矩阵
         series = pri_acc[i:i+100, :]
         #切出4倍窗长度矩阵
-        interval_former = (i - 200) if i >= 200 else 0
-        interval_latter = interval_former + 400
+        if i <= (pri_acc.shape[0] - 200):
+            interval_former = (i - 200) if i >= 200 else 0
+            interval_latter = interval_former + 400
+        else:
+            interval_latter = pri_acc.shape[0]
+            interval_former = interval_latter - 401
         series_finally = pri_acc[interval_former:interval_latter, :]
-        #除了窗口在起始位置外都需要将重力加速度估计值转化为模值
-        origin = tuple([np.sqrt(np.sum(origin[0]**2)), origin[1], origin[-1]]) if i else origin
         origin = GravityEstimate(origin= origin, series= series, series_finally= series_finally)
-    #分解加速度为水平、竖直分量
-    h_p = Acc_h(pri_acc, origin[0])
-    data = np.hstack((h_p, pri_data[:, 3:])) #组合替换加速度
+        # 分解加速度为水平、竖直分量
+        h_p = Acc_h(series, origin[0]) if h_p.any() == 0 else np.vstack((h_p, Acc_h(series, origin[0])))
+    # print(h_p.shape)
+    data = np.hstack((h_p, pri_data[:, 3:]))  # 组合替换加速度,去掉pri_data后50个数据
     # print(data)
-    #特征提取、组合标签得到最终待训练数据集
+    # 特征提取、组合标签得到最终待训练数据集
     data_finally = matrix_operation(data)
     print(data_finally)
+    print(data_finally.shape)
+
 
 if __name__ == '__main__':
     #生成均衡和去噪后数据
     # for i in range(3, 7):
     #     data = EquilibriumDenoising(p_former=r'D:\GraduateDesigning', class_num=i)
-    #     dataframe = pd.DataFrame(data=data, index=list(range(1, 62551)),
-    #                              columns=['acc_x', 'acc_y', 'acc_z', 'gyr_x', 'gyr_y', 'gyr_z',
-    #                                       'mag_x', 'mag_y', 'mag_z', 'pre', 'mode_num'])
-    #     print(dataframe)
-    #     print(data.shape)
+    #     # dataframe = pd.DataFrame(data=data, index=list(range(1, 62551)),
+    #     #                          columns=['acc_x', 'acc_y', 'acc_z', 'gyr_x', 'gyr_y', 'gyr_z',
+    #     #                                   'mag_x', 'mag_y', 'mag_z', 'pre', 'mode_num'])
+    #     # print(dataframe)
+    #     # print(data.shape)
     #     SaveFile(data, savepickle_p=r'D:\GraduateDesigning\c_%s.pickle' % i)
     data_main(path= r'D:\GraduateDesigning\c_3.pickle')
 
