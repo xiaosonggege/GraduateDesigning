@@ -94,7 +94,8 @@ class StatisticStack:
     '''
     __slots__ = ('__time_series', '__mean', '__var', '__std', '__median', '__min', '__max',
                  '__max_min', '__interquartile_range', '__kurtosis', '__skewness', '__rms',
-                 '__integral', '__auto_corr', '__mean_cross_rate', '__DC', '__spectral_energy')
+                 '__integral', '__auto_corr', '__mean_cross_rate', '__DC', '__spectral_energy',
+                 '__fft_1', '__fft_2', '__fft_3', '__fft_4', '__fft_5', '__fft_6')
 
     @staticmethod
     def fft(time_series):
@@ -127,15 +128,18 @@ class StatisticStack:
         self.__mean_cross_rate = np.sum(np.where(self.__time_series > self.__mean, 1, 0)) / \
             np.sum(self.__time_series)
         self.__spectral_energy = np.sum(np.abs(StatisticStack.fft(self.__time_series))**2)
+        self.__fft_1, self.__fft_2, self.__fft_3, self.__fft_4, self.__fft_5, self.__fft_6 = \
+            np.abs(StatisticStack.fft(self.__time_series)[1:7])
 
     def feature_stack(self):
         '''
         对每个序列的所有特征组合为特征向量
-        :return: 数据集中单个列按采样频率计算滑动窗口计算后的特征向量
+        :return: 数据集中单个列按采样频率计算滑动窗口计算后的特征向量, shape= (20,)
         '''
         return np.array([self.__mean, self.__var, self.__std, self.__median, self.__min, self.__max, self.__max_min,
                          self.__interquartile_range, self.__kurtosis, self.__skewness, self.__integral, self.__auto_corr,
-                         self.__mean_cross_rate, self.__spectral_energy])
+                         self.__mean_cross_rate, self.__spectral_energy, self.__fft_1, self.__fft_2, self.__fft_3, self.__fft_4,
+                         self.__fft_5, self.__fft_6])
 
 def GravityEstimate(origin, series, series_finally):
     '''
@@ -200,10 +204,10 @@ def matrix_operation(data):
     :param data: 待处理数据,shape= (62550, 8+1)
     :return: 数据矩阵
     '''
-    dataset = np.zeros(shape= (1, 8*14)) #此处8*14需要修改为8*每列具有的所有特征数（统计+时域+频域）总和
+    dataset = np.zeros(shape= (1, 8*20)) #此处8*20需要修改为8*每列具有的所有特征数（统计+时域+频域）总和
 
     for i in range(0, data.shape[0]-50, 50): #防止越界
-        feature_dataset = np.zeros(shape=(1, 14))  # 此处14需要修改为每列具有的所有特征数（统计+时域+频域）总和
+        feature_dataset = np.zeros(shape=(1, 20))  # 此处20需要修改为每列具有的所有特征数（统计+时域+频域）总和
         #因为data最后一列为标签
         for j in range(data.shape[-1]-1):
             statisticstack = StatisticStack(data[i:i+100, j])
@@ -259,7 +263,7 @@ def data_main(path, num):
 
 if __name__ == '__main__':
     #生成均衡和去噪后数据
-    # for i in range(3, 7):
+    # for i in range(1, 7):
     #     data = EquilibriumDenoising(p_former=r'F:\GraduateDesigning', class_num=i)
     #     # dataframe = pd.DataFrame(data=data, index=list(range(1, 62551)),
     #     #                          columns=['acc_x', 'acc_y', 'acc_z', 'gyr_x', 'gyr_y', 'gyr_z',
@@ -267,10 +271,17 @@ if __name__ == '__main__':
     #     # print(dataframe)
     #     # print(data.shape)
     #     SaveFile(data, savepickle_p=r'F:\GraduateDesigning\c_%s.pickle' % i)
-    for i in range(3, 7):
-        data_main(path= r'F:\GraduateDesigning\c_%s.pickle' % i, num= i)
-    data = LoadFile(p= r'F:\GraduateDesigning\c_3_finallydata.pickle')
-    print(data.shape)
+    # for i in range(1, 7):
+    #     data_main(path= r'F:\GraduateDesigning\c_%s.pickle' % i, num= i)
+    #组合6组和后四组数据得到最后数据集
+    # data_all = np.zeros(shape= (1250, 181))
+    # for i in range(3, 7):
+    #     data = LoadFile(p= r'F:\GraduateDesigning\c_%s_finallydata.pickle' % i)
+    #     # print(data[0, 0])
+    #     data_all = data if data_all.any() == 0 else np.vstack((data_all, data))
+    # SaveFile(data= data_all, savepickle_p= r'F:\GraduateDesigning\data_sim.pickle')
+    a = 1
+
 
 
 
