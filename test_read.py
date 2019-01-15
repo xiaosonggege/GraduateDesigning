@@ -99,7 +99,13 @@ if __name__ == '__main__':
     # data = data[(~data['acc_x'].isin([190])) & (~data['acc_y'].isin([191]))]
     # data = data.loc[data['pre'] > 190]
     # print(data)
-
+    a = np.arange(20).reshape(4, 5)
+    def fun(a):
+        b = a
+        np.random.shuffle(b)
+        return b
+    c = fun(a)
+    print(c)
 
 
 

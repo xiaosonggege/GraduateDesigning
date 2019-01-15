@@ -50,24 +50,6 @@ def EquilibriumDenoising(p_former, class_num):
     :param class_num: 需要处理的模式类别
     :return: 经过均衡化、去噪后的数据集
     '''
-    # data为4类数据经过数据均衡、去噪后的矩阵
-    # data = np.zeros(shape=[125050 * 4, 11])  # 如果制作5000个shape= [62550*4, 11], 10000个shape= [125050*4, 11]
-    # for num in range(3, 7):
-    #     # p = r'F:\GraduateDesigning\ICT DataSet\Label_%s.txt' % num
-    #     p = p_former + r'\\' + r'ICT DataSet\Label_%s.txt' % num
-    #     with open(p, 'r') as file:
-    #         print('正在处理第%d个模型' % num)
-    #         sub_data = np.loadtxt(file, delimiter=',', skiprows=0)[:200000, :]  # 如果制作5000时取100000, 10000时取200000
-    #         i = 0
-    #         while i < sub_data.shape[0]:
-    #             if sub_data[i, :].any() == 0 or sub_data[i, -2] < 0:
-    #                 sub_data = np.delete(sub_data, i, axis=0)
-    #             else:
-    #                 i += 1
-    #                 print(i)
-    #         sub_data = np.delete(sub_data, [3, 4, 5], axis=1)
-    #         data = sub_data[:125051, :] if data.any() == 0 else np.vstack(
-    #             (data, sub_data[:125051, :]))  # 如果制作5000时取62551, 10000时取125051
     p = p_former + r'\\' + r'ICT DataSet\Label_%s.txt' % class_num
     with open(p, 'r') as file:
         print('正在处理第%s个模型数据' % class_num)
@@ -84,6 +66,7 @@ def EquilibriumDenoising(p_former, class_num):
 
         data_frame = data_frame.loc[data_frame['pre'] >= 0]
         #DataFrame类转ndarray类矩阵
+        data_frame = data_frame.apply(lambda x: x.astype(np.float64))
         data = np.array(data_frame)[:62600, :] #62600个数据,多取50个
         data = np.hstack((data, np.ones(shape= (data.shape[0], 1)) * class_num))
     return data
@@ -94,7 +77,7 @@ class StatisticStack:
     '''
     __slots__ = ('__time_series', '__mean', '__var', '__std', '__median', '__min', '__max',
                  '__max_min', '__interquartile_range', '__kurtosis', '__skewness', '__rms',
-                 '__integral', '__auto_corr', '__mean_cross_rate', '__DC', '__spectral_energy',
+                 '__integral', '__mean_cross_rate', '__DC', '__spectral_energy',
                  '__fft_1', '__fft_2', '__fft_3', '__fft_4', '__fft_5', '__fft_6')
 
     @staticmethod
@@ -124,7 +107,6 @@ class StatisticStack:
         self.__kurtosis = stats.kurtosis(self.__time_series)
         self.__skewness = stats.skew(self.__time_series)
         self.__integral = np.sum(self.__time_series)
-        self.__auto_corr = stats.pearsonr(self.__time_series, self.__time_series)[0]
         self.__mean_cross_rate = np.sum(np.where(self.__time_series > self.__mean, 1, 0)) / \
             np.sum(self.__time_series)
         self.__spectral_energy = np.sum(np.abs(StatisticStack.fft(self.__time_series))**2)
@@ -137,8 +119,8 @@ class StatisticStack:
         :return: 数据集中单个列按采样频率计算滑动窗口计算后的特征向量, shape= (20,)
         '''
         return np.array([self.__mean, self.__var, self.__std, self.__median, self.__min, self.__max, self.__max_min,
-                         self.__interquartile_range, self.__kurtosis, self.__skewness, self.__integral, self.__auto_corr,
-                         self.__mean_cross_rate, self.__spectral_energy, self.__fft_1, self.__fft_2, self.__fft_3, self.__fft_4,
+                         self.__interquartile_range, self.__kurtosis, self.__skewness, self.__integral,self.__mean_cross_rate,
+                         self.__spectral_energy, self.__fft_1, self.__fft_2, self.__fft_3, self.__fft_4,
                          self.__fft_5, self.__fft_6])
 
 def GravityEstimate(origin, series, series_finally):
@@ -201,10 +183,10 @@ def Acc_h(a, g):
 def matrix_operation(data):
     '''
     对进行处理后的数据集进行滑动窗口特征计算，并生成数据矩阵
-    :param data: 待处理数据,shape= (62550, 8+1)
+    :param data: 待处理数据,shape= (62550, 9+1)
     :return: 数据矩阵
     '''
-    dataset = np.zeros(shape= (1, 8*20)) #此处8*20需要修改为8*每列具有的所有特征数（统计+时域+频域）总和
+    dataset = np.zeros(shape= (1, 9*19)) #此处9*19需要修改为9*每列具有的所有特征数（统计+时域+频域）总和
 
     for i in range(0, data.shape[0]-50, 50): #防止越界
         feature_dataset = np.zeros(shape=(1, 20))  # 此处20需要修改为每列具有的所有特征数（统计+时域+频域）总和
@@ -273,14 +255,24 @@ if __name__ == '__main__':
     #     SaveFile(data, savepickle_p=r'F:\GraduateDesigning\c_%s.pickle' % i)
     # for i in range(1, 7):
     #     data_main(path= r'F:\GraduateDesigning\c_%s.pickle' % i, num= i)
-    #组合6组和后四组数据得到最后数据集
-    # data_all = np.zeros(shape= (1250, 181))
-    # for i in range(3, 7):
-    #     data = LoadFile(p= r'F:\GraduateDesigning\c_%s_finallydata.pickle' % i)
-    #     # print(data[0, 0])
-    #     data_all = data if data_all.any() == 0 else np.vstack((data_all, data))
-    # SaveFile(data= data_all, savepickle_p= r'F:\GraduateDesigning\data_sim.pickle')
-    a = 1
+    # #组合6组和后四组数据得到最后数据集
+    data_all = np.zeros(shape= (1250, 181))
+    for i in range(1, 7):
+        data = LoadFile(p= r'F:\GraduateDesigning\c_%s_finallydata.pickle' % i)
+        # print(data[0, 0])
+        data_all = data if data_all.any() == 0 else np.vstack((data_all, data))
+    SaveFile(data= data_all, savepickle_p= r'F:\GraduateDesigning\data_all.pickle')
+
+    #检查缺失值
+    data = LoadFile(p= r'F:\GraduateDesigning\c_6_finallydata.pickle')
+    # print(data[:, 171])
+    nan = []
+    for i in range(data.shape[-1]):
+        if np.isnan(data[:, i]).any():
+            nan.append(i)
+    print(len(nan), nan)
+
+
 
 
 

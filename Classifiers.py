@@ -26,10 +26,18 @@ from sklearn.model_selection import train_test_split
 from matplotlib import pyplot as plt
 
 class MultiClassifiers:
-    __slots__ = ('__dataset_all', '__dataset_sim',
-                 '__precision_rate_SVM', '__recall_rate_SVM', '__F1_rate_SVM',
-                 '__precision_rate_Adaboost', '__recals_rate_Adaboost', '__F1_rate_Adaboost',
-                 '__precision_rate_XGBoost', '__recall_rate_XGBoost', '__F1_rate_XGBoost')
+    __slots__ = ('__dataset_all', '__dataset_sim')
+
+    @staticmethod
+    def shuffle(data):
+        '''
+        打乱数据
+        :param data: 待处理数据
+        :return: 随机打乱后的数据
+        '''
+        data_shuffle = data
+        np.random.shuffle(data_shuffle)
+        return data_shuffle
 
     @classmethod
     def multi_SVM(cls, kernel, C, decision_function_shape, tol):
@@ -166,8 +174,8 @@ class MultiClassifiers:
         :param dataset_all: 输入6类交通模式数据
         :param dataset_sim: 输入4类交通模式数据
         '''
-        self.__dataset_all = dataset_all
-        self.__dataset_sim = dataset_sim
+        self.__dataset_all = self.shuffle(dataset_all)
+        self.__dataset_sim = self.shuffle(dataset_sim)
 
     def training_main(self, model_name, model, Threshold=None):
         '''
@@ -178,7 +186,10 @@ class MultiClassifiers:
         :param Threshold: type= (T_pre, T_rec, T_F1), 精确率、召回率和F1指标阈值
         :return: None
         '''
-
+        #初始化准确率、召回率、F1指数
+        precision_rate = 0
+        recall_rate = 0
+        F1_rate = 0
         # k-fold对象,用于生成训练集和交叉验证集数据
         kf = model_selection.KFold(n_splits=10, shuffle=True, random_state=32)
         # 交叉验证次数序号
@@ -193,13 +204,16 @@ class MultiClassifiers:
             # 对验证集进行预测
             pred_cv = model.predict(cv_data[:, :-1])
             # 对验证数据进行指标评估
-            precision_rate = 0 if fold == 1 else ((fold - 1) * precision_rate + precision_score(cv_data[:-1],
+            precision_rate = ((fold - 1) * precision_rate + precision_score(cv_data[:-1],
                                                                                                 pred_cv)) / fold
-            recall_rate = 0 if fold == 1 else ((fold - 1) * recall_rate + recall_score(cv_data[:-1], pred_cv)) / fold
-            F1_rate = 0 if fold == 1 else ((fold - 1) * F1_rate + f1_score(cv_data[:-1], pred_cv)) / fold
+            recall_rate = ((fold - 1) * recall_rate + recall_score(cv_data[:-1], pred_cv)) / fold
+            F1_rate = ((fold - 1) * F1_rate + f1_score(cv_data[:-1], pred_cv)) / fold
+
+            fold += 1
 
         print('模型 %s在验证集上的性能指标为: 准确率- %.8f, 召回率- %.8f, F1指标- %.8f' %
-              (model_name, precision_rate, recall_rate, F1_rate))
+                (model_name, precision_rate, recall_rate, F1_rate))
+
 
 if __name__ == '__main__':
     # dataset = np.arange(50)
