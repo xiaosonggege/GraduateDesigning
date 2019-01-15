@@ -90,15 +90,16 @@ if __name__ == '__main__':
     #     b = pickle.load(file)
     #     print(file.tell())
     #     print(b)
-    a = np.arange(200).reshape(20, 10)
-    # a = np.delete(a, [0, 1, 2, 3, 4], axis= 1)
-    data = pd.DataFrame(data= a, columns= ['acc_x', 'acc_y', 'acc_z', 'gyr_x', 'gyr_y', 'gyr_z',
-                                           'mag_x', 'mag_y', 'mag_z', 'pre'], index= list(range(20)))
-    print(data)
-    # data.loc()
-    data = data[(~data['acc_x'].isin([190])) & (~data['acc_y'].isin([191]))]
-    data = data.loc[data['pre'] > 190]
-    print(data)
+    # a = np.arange(200).reshape(20, 10)
+    # # a = np.delete(a, [0, 1, 2, 3, 4], axis= 1)
+    # data = pd.DataFrame(data= a, columns= ['acc_x', 'acc_y', 'acc_z', 'gyr_x', 'gyr_y', 'gyr_z',
+    #                                        'mag_x', 'mag_y', 'mag_z', 'pre'], index= list(range(20)))
+    # print(data)
+    # # data.loc()
+    # data = data[(~data['acc_x'].isin([190])) & (~data['acc_y'].isin([191]))]
+    # data = data.loc[data['pre'] > 190]
+    # print(data)
+
 
 
 

@@ -16,6 +16,8 @@ from sklearn.tree import DecisionTreeClassifier
 import xgboost as xgb
 from xgboost import XGBClassifier
 from sklearn import manifold
+from sklearn.metrics import precision_score, recall_score, f1_score
+from sklearn import model_selection
 
 #测试代码需要
 import numpy as np
@@ -24,17 +26,13 @@ from sklearn.model_selection import train_test_split
 from matplotlib import pyplot as plt
 
 class MultiClassifiers:
-    __slots__ = ('__dataset')
+    __slots__ = ('__dataset_all', '__dataset_sim',
+                 '__precision_rate_SVM', '__recall_rate_SVM', '__F1_rate_SVM',
+                 '__precision_rate_Adaboost', '__recals_rate_Adaboost', '__F1_rate_Adaboost',
+                 '__precision_rate_XGBoost', '__recall_rate_XGBoost', '__F1_rate_XGBoost')
 
-    def __init__(self, dataset):
-        '''
-        多分类器构造函数
-        :param dataset: 待处理数据集（可以为交叉验证的一部分）
-        '''
-
-        self.__dataset = dataset
-
-    def multi_SVM(self, kernel, C, decision_function_shape, tol):
+    @classmethod
+    def multi_SVM(cls, kernel, C, decision_function_shape, tol):
         '''
         多分类SVM分类器
         :param kernel: 选择的核函数 ‘linear’, ‘poly’, ‘rbf’, ‘sigmoid’, ‘precomputed’
@@ -54,7 +52,8 @@ class MultiClassifiers:
 
         return multi_svm
 
-    def multi_Adaboost(self, max_depth, min_samples_split, min_samples_leaf, algorithm, n_estimators, learning_rate):
+    @classmethod
+    def multi_Adaboost(cls, max_depth, min_samples_split, min_samples_leaf, algorithm, n_estimators, learning_rate):
         '''
         多分类CART树
         :param max_depth: 树最大深度
@@ -85,7 +84,8 @@ class MultiClassifiers:
 
         return bdt
 
-    def multi_XGBoost(self, max_depth, learning_rate, n_estimators, objective, nthread, gamma, min_child_weight,
+    @classmethod
+    def multi_XGBoost(cls, max_depth, learning_rate, n_estimators, objective, nthread, gamma, min_child_weight,
                       subsample, reg_lambda, scale_pos_weight):
         '''
         XGBoost对象
@@ -125,77 +125,121 @@ class MultiClassifiers:
 
         return xgbc
 
-def t_SNE(n_components, perplexity= 30.0, early_exaggeration= 12, learning_rate= 200, n_iter= 1000,
-          min_grad_norm= 1e-7, init= 'pca', verbose= 0, method= 'barnes_hut', angle= 0.5):
-    '''
-    t-SNE降维可视化
-    :param n_components: 嵌入空间的维度
-    :param perpexity: 混乱度，表示t-SNE优化过程中考虑邻近点的多少，默认为30，建议取值在5到50之间
-    :param early_exaggeration: 表示嵌入空间簇间距的大小，默认为12，该值越大，可视化后的簇间距越大
-    :param learning_rate: 学习率，表示梯度下降的快慢，默认为200，建议取值在10到1000之间
-    :param n_iter: 迭代次数，默认为1000，自定义设置时应保证大于250
-    :param min_grad_norm: 如果梯度小于该值，则停止优化。默认为1e-7
-    :param init: 初始化，默认为random。取值为random为随机初始化，取值为pca为利用PCA进行初始化（常用），
-    取值为numpy数组时必须shape=(n_samples, n_components)
-    :param verbose: 是否打印优化信息，取值0或1，默认为0=>不打印信息。打印的信息为：近邻点数量、耗时、σ、KL散度、误差等
-    :param method: 两种优化方法：barnets_hut和exact。第一种耗时O(NlogN)，第二种耗时O(N^2)但是误差小，
-    同时第二种方法不能用于百万级样本
-    :param angle: 当method=barnets_hut时，该参数有用，用于均衡效率与误差，默认值为0.5，该值越大，效率越高&误差越大，
-    否则反之。当该值在0.2-0.8之间时，无变化。
-    :return: t-SNE类
-    '''
-    tsne = manifold.TSNE(
-        n_components= n_components,
-        perplexity= perplexity,
-        early_exaggeration= early_exaggeration,
-        learning_rate= learning_rate,
-        n_iter= n_iter,
-        min_grad_norm= min_grad_norm,
-        init= init,
-        verbose= verbose,
-        random_state= 32,
-        method= method,
-        angle= angle
-    )
-    return tsne
+    @classmethod
+    def t_SNE(cls, n_components, perplexity=30.0, early_exaggeration=12, learning_rate=200, n_iter=1000,
+              min_grad_norm=1e-7, init='pca', verbose=0, method='barnes_hut', angle=0.5):
+        '''
+        t-SNE降维可视化
+        :param n_components: 嵌入空间的维度
+        :param perpexity: 混乱度，表示t-SNE优化过程中考虑邻近点的多少，默认为30，建议取值在5到50之间
+        :param early_exaggeration: 表示嵌入空间簇间距的大小，默认为12，该值越大，可视化后的簇间距越大
+        :param learning_rate: 学习率，表示梯度下降的快慢，默认为200，建议取值在10到1000之间
+        :param n_iter: 迭代次数，默认为1000，自定义设置时应保证大于250
+        :param min_grad_norm: 如果梯度小于该值，则停止优化。默认为1e-7
+        :param init: 初始化，默认为random。取值为random为随机初始化，取值为pca为利用PCA进行初始化（常用），
+        取值为numpy数组时必须shape=(n_samples, n_components)
+        :param verbose: 是否打印优化信息，取值0或1，默认为0=>不打印信息。打印的信息为：近邻点数量、耗时、σ、KL散度、误差等
+        :param method: 两种优化方法：barnets_hut和exact。第一种耗时O(NlogN)，第二种耗时O(N^2)但是误差小，
+        同时第二种方法不能用于百万级样本
+        :param angle: 当method=barnets_hut时，该参数有用，用于均衡效率与误差，默认值为0.5，该值越大，效率越高&误差越大，
+        否则反之。当该值在0.2-0.8之间时，无变化。
+        :return: t-SNE类
+        '''
+        tsne = manifold.TSNE(
+            n_components=n_components,
+            perplexity=perplexity,
+            early_exaggeration=early_exaggeration,
+            learning_rate=learning_rate,
+            n_iter=n_iter,
+            min_grad_norm=min_grad_norm,
+            init=init,
+            verbose=verbose,
+            random_state=32,
+            method=method,
+            angle=angle
+        )
+        return tsne
+
+    def __init__(self, dataset_all, dataset_sim):
+        '''
+        分类器构造函数
+        :param dataset_all: 输入6类交通模式数据
+        :param dataset_sim: 输入4类交通模式数据
+        '''
+        self.__dataset_all = dataset_all
+        self.__dataset_sim = dataset_sim
+
+    def training_main(self, model_name, model, Threshold=None):
+        '''
+        针对多个模型进行训练操作
+        :param model_name: 模型名称
+        :param model: 需要训练的模型
+        :param training_data: 需要载入的数据集
+        :param Threshold: type= (T_pre, T_rec, T_F1), 精确率、召回率和F1指标阈值
+        :return: None
+        '''
+
+        # k-fold对象,用于生成训练集和交叉验证集数据
+        kf = model_selection.KFold(n_splits=10, shuffle=True, random_state=32)
+        # 交叉验证次数序号
+        fold = 1
+
+        for train_data_index, cv_data_index in kf.split(self.__dataset_sim):
+            # 找到对应索引数据
+            train_data, cv_data = self.__dataset_sim[train_data_index], self.__dataset_sim[cv_data_index]
+            # 训练数据
+            model.fit(X=train_data[:, :-1], y=train_data[:, -1])
+
+            # 对验证集进行预测
+            pred_cv = model.predict(cv_data[:, :-1])
+            # 对验证数据进行指标评估
+            precision_rate = 0 if fold == 1 else ((fold - 1) * precision_rate + precision_score(cv_data[:-1],
+                                                                                                pred_cv)) / fold
+            recall_rate = 0 if fold == 1 else ((fold - 1) * recall_rate + recall_score(cv_data[:-1], pred_cv)) / fold
+            F1_rate = 0 if fold == 1 else ((fold - 1) * F1_rate + f1_score(cv_data[:-1], pred_cv)) / fold
+
+        print('模型 %s在验证集上的性能指标为: 准确率- %.8f, 召回率- %.8f, F1指标- %.8f' %
+              (model_name, precision_rate, recall_rate, F1_rate))
 
 if __name__ == '__main__':
     # dataset = np.arange(50)
     # multiclassifier = MultiClassifiers(dataset= dataset)
-    digits = load_digits(n_class= 10)
-    x, y = digits.data, digits.target
-    #初始化image, image_h矩阵
-    image = np.zeros(shape= (8, 8))
-    image_h = np.zeros(shape= (8, 8*20))
-    num = 0
-    for i in range(20):
-        for j in range(20):
-            image = digits.images[num] if image.any() == 0 else np.hstack((image, digits.images[num]))
-            num += 1
-        # print(image.shape, image_h.shape)
-        image_h = image if image_h.any() == 0 else np.vstack((image_h, image))
-        image = np.zeros(shape= (8, 8))
+    # digits = load_digits(n_class= 10)
+    # x, y = digits.data, digits.target
+    # #初始化image, image_h矩阵
+    # image = np.zeros(shape= (8, 8))
+    # image_h = np.zeros(shape= (8, 8*20))
+    # num = 0
+    # for i in range(20):
+    #     for j in range(20):
+    #         image = digits.images[num] if image.any() == 0 else np.hstack((image, digits.images[num]))
+    #         num += 1
+    #     # print(image.shape, image_h.shape)
+    #     image_h = image if image_h.any() == 0 else np.vstack((image_h, image))
+    #     image = np.zeros(shape= (8, 8))
 
     # print(x.shape, y.shape)
     # print(type(digits.images[0]))
-    figure = plt.figure()
-    plt.imshow(image_h, cmap=plt.cm.binary)
+    # figure = plt.figure()
+    # plt.imshow(image_h, cmap=plt.cm.binary)
     # figure_1 = plt.figure()
     # plt.imshow(digits.images[2], cmap=plt.cm.binary)
     # plt.show()
 
-    tsne = manifold.TSNE(n_components=2, init='pca', random_state=501)
-    X_tsne = tsne.fit_transform(x)
-    print(X_tsne.shape)
-    x_min, x_max = X_tsne.min(0), X_tsne.max(0)
-    X_norm = (X_tsne - x_min) / (x_max - x_min)  # 归一化
-    plt.figure(figsize=(8, 8))
-    for i in range(X_norm.shape[0]):
-        plt.text(X_norm[i, 0], X_norm[i, 1], str(y[i]), color=plt.cm.Set1(y[i]),
-                 fontdict={'weight': 'bold', 'size': 9})
-    plt.xticks([])
-    plt.yticks([])
-    plt.show()
+    # tsne = manifold.TSNE(n_components=2, init='pca', random_state=501)
+    # X_tsne = tsne.fit_transform(x)
+    # print(X_tsne.shape)
+    # x_min, x_max = X_tsne.min(0), X_tsne.max(0)
+    # X_norm = (X_tsne - x_min) / (x_max - x_min)  # 归一化
+    # plt.figure(figsize=(8, 8))
+    # for i in range(X_norm.shape[0]):
+    #     plt.text(X_norm[i, 0], X_norm[i, 1], str(y[i]), color=plt.cm.Set1(y[i]),
+    #              fontdict={'weight': 'bold', 'size': 9})
+    # plt.xticks([])
+    # plt.yticks([])
+    # plt.show()
+    classifier = MultiClassifiers(dataset_all= np.arange(20), dataset_sim= np.arange(30))
+    print(classifier._MultiClassifiers__dataset_all, classifier._MultiClassifiers__dataset_sim)
 
 
 
