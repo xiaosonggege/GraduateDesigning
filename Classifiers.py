@@ -227,7 +227,7 @@ class MultiClassifiers:
         :return: None
         '''
         #初始化k折平均查准率，k折平均查全率，k折平均F1参数
-        precision_rate, recall_rate, F1_score = 0, 0, 0
+        precision_rate, recall_rate, F1_rate = 0, 0, 0
         # k-fold对象,用于生成训练集和交叉验证集数据
         kf = model_selection.KFold(n_splits=5, shuffle=True, random_state=32)
         # 交叉验证次数序号
@@ -248,8 +248,8 @@ class MultiClassifiers:
             precision_rate_per, recall_rate_per, F1_score_per = MultiClassifiers.multi_metrics(cv_data[:-1], pred_cv, n_class= 6)
 
             precision_rate = ((fold - 1) * precision_rate + precision_rate_per) / fold
-            recall_rate = ((fold - 1) * recall_rate_per) / fold
-            F1_rate = ((fold - 1) * F1_score + F1_score_per) / fold
+            recall_rate = ((fold - 1) * recall_rate + recall_rate_per) / fold
+            F1_rate = ((fold - 1) * F1_rate + F1_score_per) / fold
 
             # print(cv_data[:, -1].shape, pred_cv.shape)
             # print(precision_score(cv_data[:-1], pred_cv))
