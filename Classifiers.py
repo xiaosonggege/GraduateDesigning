@@ -191,28 +191,34 @@ class MultiClassifiers:
         recall_rate = 0
         F1_rate = 0
         # k-fold对象,用于生成训练集和交叉验证集数据
-        kf = model_selection.KFold(n_splits=10, shuffle=True, random_state=32)
+        kf = model_selection.KFold(n_splits=5, shuffle=True, random_state=32)
         # 交叉验证次数序号
         fold = 1
 
-        for train_data_index, cv_data_index in kf.split(self.__dataset_sim):
+        for train_data_index, cv_data_index in kf.split(self.__dataset_all):
             # 找到对应索引数据
-            train_data, cv_data = self.__dataset_sim[train_data_index], self.__dataset_sim[cv_data_index]
+            train_data, cv_data = self.__dataset_all[train_data_index], self.__dataset_all[cv_data_index]
+
             # 训练数据
             model.fit(X=train_data[:, :-1], y=train_data[:, -1])
+
+            print('第%s折模型训练集精度为: %s' % (fold, model.score(train_data[:, :-1], train_data[:, -1])))
 
             # 对验证集进行预测
             pred_cv = model.predict(cv_data[:, :-1])
             # 对验证数据进行指标评估
-            precision_rate = ((fold - 1) * precision_rate + precision_score(cv_data[:-1],
-                                                                                                pred_cv)) / fold
-            recall_rate = ((fold - 1) * recall_rate + recall_score(cv_data[:-1], pred_cv)) / fold
-            F1_rate = ((fold - 1) * F1_rate + f1_score(cv_data[:-1], pred_cv)) / fold
+            # precision_rate = ((fold - 1) * precision_rate + precision_score(cv_data[:-1], pred_cv)) / fold
+            # recall_rate = ((fold - 1) * recall_rate + recall_score(cv_data[:-1], pred_cv)) / fold
+            # F1_rate = ((fold - 1) * F1_rate + f1_score(cv_data[:-1], pred_cv)) / fold
+
+            # print(cv_data[:, -1].shape, pred_cv.shape)
+            # print(precision_score(cv_data[:-1], pred_cv))
+            print(model.score(cv_data[:, :-1], cv_data[:, -1]))
 
             fold += 1
 
-        print('模型 %s在验证集上的性能指标为: 准确率- %.8f, 召回率- %.8f, F1指标- %.8f' %
-                (model_name, precision_rate, recall_rate, F1_rate))
+        # print('模型 %s在验证集上的性能指标为: 准确率- %.8f, 召回率- %.8f, F1指标- %.8f' %
+        #         (model_name, precision_rate, recall_rate, F1_rate))
 
 
 if __name__ == '__main__':
@@ -253,7 +259,7 @@ if __name__ == '__main__':
     # plt.yticks([])
     # plt.show()
     classifier = MultiClassifiers(dataset_all= np.arange(20), dataset_sim= np.arange(30))
-    print(classifier._MultiClassifiers__dataset_all, classifier._MultiClassifiers__dataset_sim)
+
 
 
 

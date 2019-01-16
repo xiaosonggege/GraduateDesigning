@@ -99,13 +99,11 @@ if __name__ == '__main__':
     # data = data[(~data['acc_x'].isin([190])) & (~data['acc_y'].isin([191]))]
     # data = data.loc[data['pre'] > 190]
     # print(data)
-    a = np.arange(20).reshape(4, 5)
-    def fun(a):
-        b = a
-        np.random.shuffle(b)
-        return b
-    c = fun(a)
-    print(c)
+    from sklearn.metrics import precision_score
+    y_true = [7, 1, 2, 3, 6, 4]
+    y_pred = [7, 2, 1, 3, 6, 1]
+    print(precision_score(y_true, y_pred, average='macro'))
+
 
 
 
