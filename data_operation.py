@@ -89,6 +89,22 @@ class StatisticStack:
         '''
         return sci.fft(time_series)
 
+    @staticmethod
+    def corr(time_series):
+        '''
+        计算皮尔森相关系数
+        :param time_series: 待处理序列
+        :return: 皮尔森相关系数计算结果
+        '''
+        series_1 = time_series[:-2]
+        series_2 = time_series[2:]
+        mean = np.mean(time_series)
+        #平方期望
+        e_mean2 = np.sum((time_series - mean)**2) if np.sum((time_series - mean)**2) < 0.01 else \
+            np.sum((time_series - mean)**2) + 0.01
+        return np.sum((series_1 - mean) * (series_2 - mean)) / e_mean2
+
+
     def __init__(self, time_series):
         '''
         构造函数
@@ -255,16 +271,16 @@ if __name__ == '__main__':
     #     SaveFile(data, savepickle_p=r'F:\GraduateDesigning\c_%s.pickle' % i)
     # for i in range(1, 7):
     #     data_main(path= r'F:\GraduateDesigning\c_%s.pickle' % i, num= i)
-    # #组合6组和后四组数据得到最后数据集
-    data_all = np.zeros(shape= (1250, 181))
-    for i in range(1, 7):
-        data = LoadFile(p= r'F:\GraduateDesigning\c_%s_finallydata.pickle' % i)
-        # print(data[0, 0])
-        data_all = data if data_all.any() == 0 else np.vstack((data_all, data))
-    SaveFile(data= data_all, savepickle_p= r'F:\GraduateDesigning\data_all.pickle')
+    #组合6组和后四组数据得到最后数据集
+    # data_all = np.zeros(shape= (1250, 181))
+    # for i in range(3, 7):
+    #     data = LoadFile(p= r'F:\GraduateDesigning\c_%s_finallydata.pickle' % i)
+    #     # print(data[0, 0])
+    #     data_all = data if data_all.any() == 0 else np.vstack((data_all, data))
+    # SaveFile(data= data_all, savepickle_p= r'F:\GraduateDesigning\data_sim.pickle')
 
     #检查缺失值
-    data = LoadFile(p= r'F:\GraduateDesigning\c_6_finallydata.pickle')
+    data = LoadFile(p= r'F:\GraduateDesigning\data_all.pickle')
     # print(data[:, 171])
     nan = []
     for i in range(data.shape[-1]):

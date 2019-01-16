@@ -99,10 +99,35 @@ if __name__ == '__main__':
     # data = data[(~data['acc_x'].isin([190])) & (~data['acc_y'].isin([191]))]
     # data = data.loc[data['pre'] > 190]
     # print(data)
-    from sklearn.metrics import precision_score
-    y_true = [7, 1, 2, 3, 6, 4]
-    y_pred = [7, 2, 1, 3, 6, 1]
-    print(precision_score(y_true, y_pred, average='macro'))
+    a_pre = np.array([1, 2, 3, 4, 1, 6, 1, 4, 3, 2, 1])
+    b_fact = np.array([2, 2, 3, 4, 5, 1, 5, 4, 3, 1, 1])
+    recall = np.zeros(shape= (6, 2))
+    pre = np.zeros(shape= (6, 2))
+    for i in range(1, 7):
+        pre_bool = np.where(a_pre == i, 1, 0)
+        fact_bool = np.where(b_fact == i, 1, 0)
+        #计算预测值为i的总数
+        sum_pre = np.sum(pre_bool)
+        #计算实际值为i的总数
+        sum_fact = np.sum(fact_bool)
+        pre_fact = (pre_bool & fact_bool)
+        #计算实际值和预测值一致的总数
+        sum_con = np.sum(pre_fact)
+        #将实际值部分存入b_fact
+        recall[i-1] = np.array([sum_con, sum_fact - sum_con])
+        pre[i-1] = np.array([sum_con, sum_pre - sum_con])
+        #将预测值部分存入a_pre
+    pre_pd = pd.DataFrame(data= pre, index= [i for i in range(1, 7)], columns= ['TP', 'FP'])
+    pre_pd.eval('precision_rate = TP / (TP + FP)', inplace= True)
+    recall_pd = pd.DataFrame(data= recall, index= [i for i in range(1, 7)], columns= ['TP', 'FN'])
+    recall_pd.eval('recall_rate = TP / (TP +FN)' , inplace= True)
+    print(pre_pd)
+    print(recall_pd)
+
+
+
+
+
 
 
 
