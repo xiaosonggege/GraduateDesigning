@@ -18,9 +18,10 @@ from xgboost import XGBClassifier
 from sklearn import manifold
 from sklearn.metrics import precision_score, recall_score, f1_score
 from sklearn import model_selection
+import pandas as pd
+import numpy as np
 
 #测试代码需要
-import numpy as np
 from sklearn.datasets import load_iris, load_digits
 from sklearn.model_selection import train_test_split
 from matplotlib import pyplot as plt
@@ -38,6 +39,45 @@ class MultiClassifiers:
         data_shuffle = data
         np.random.shuffle(data_shuffle)
         return data_shuffle
+
+    @staticmethod
+    def multi_metrics(faction, prediction, n_class):
+        '''
+        多分类分类器进行混淆矩阵计算
+        :param faction: 实际值标签
+        :param prediction: 预测值标签
+        :param n_class: 类别数
+        :return: tuple= (precision_rate, recall_rate, F1_score)
+        '''
+        recall = np.zeros(shape=(n_class, 2))
+        precision = np.zeros(shape=(n_class, 2))
+        for i in range(1, n_class+1):
+            precision_bool = np.where(prediction == i, 1, 0)
+            faction_bool = np.where(faction == i, 1, 0)
+            # 计算预测值标签为i的总数
+            sum_precision = np.sum(precision_bool)
+            # 计算实际值标签为i的总数
+            sum_faction = np.sum(faction_bool)
+            # 计算实际值和预测值一致的总数
+            precision_faction = (precision_bool & faction_bool)
+            sum_consistently = np.sum(precision_faction)
+            # 将实际值部分存入b_fact
+            recall[i - 1] = np.array([sum_consistently, sum_faction - sum_consistently])
+            precision[i - 1] = np.array([sum_consistently, sum_precision - sum_consistently])
+            # 将预测值部分存入a_pre
+        precision_pd = pd.DataFrame(data=precision, index=[i for i in range(1, 7)], columns=['TP', 'FP'])
+        precision_pd.eval('precision_rate = TP / (TP + FP)', inplace=True)
+        recall_pd = pd.DataFrame(data=recall, index=[i for i in range(1, 7)], columns=['TP', 'FN'])
+        recall_pd.eval('recall_rate = TP / (TP +FN)', inplace=True)
+        recall_rate_ave = np.mean(recall_pd['recall_rate'])
+        precision_rate_ave = np.mean(precision_pd['precision_rate'])
+        F1_score = 2 * precision_rate_ave * recall_rate_ave / (precision_rate_ave + recall_rate_ave)
+        # print(precision_pd)
+        # print(recall_pd)
+        # print(precision_rate_ave)
+        # print(recall_rate_ave)
+        # print(F1_score)
+        return tuple([precision_rate_ave, recall_rate_ave, F1_score])
 
     @classmethod
     def multi_SVM(cls, kernel, C, decision_function_shape, tol):
@@ -207,18 +247,18 @@ class MultiClassifiers:
             # 对验证集进行预测
             pred_cv = model.predict(cv_data[:, :-1])
             # 对验证数据进行指标评估
-            # precision_rate = ((fold - 1) * precision_rate + precision_score(cv_data[:-1], pred_cv)) / fold
-            # recall_rate = ((fold - 1) * recall_rate + recall_score(cv_data[:-1], pred_cv)) / fold
-            # F1_rate = ((fold - 1) * F1_rate + f1_score(cv_data[:-1], pred_cv)) / fold
+            precision_rate = ((fold - 1) * precision_rate + precision_score(cv_data[:-1], pred_cv)) / fold
+            recall_rate = ((fold - 1) * recall_rate + recall_score(cv_data[:-1], pred_cv)) / fold
+            F1_rate = ((fold - 1) * F1_rate + f1_score(cv_data[:-1], pred_cv)) / fold
 
             # print(cv_data[:, -1].shape, pred_cv.shape)
             # print(precision_score(cv_data[:-1], pred_cv))
-            print(model.score(cv_data[:, :-1], cv_data[:, -1]))
+            # print(model.score(cv_data[:, :-1], cv_data[:, -1]))
 
             fold += 1
 
-        # print('模型 %s在验证集上的性能指标为: 准确率- %.8f, 召回率- %.8f, F1指标- %.8f' %
-        #         (model_name, precision_rate, recall_rate, F1_rate))
+        print('模型 %s在验证集上的性能指标为: 准确率- %.8f, 召回率- %.8f, F1指标- %.8f' %
+                (model_name, precision_rate, recall_rate, F1_rate))
 
 
 if __name__ == '__main__':

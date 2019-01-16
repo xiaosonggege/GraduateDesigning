@@ -123,7 +123,13 @@ if __name__ == '__main__':
     recall_pd.eval('recall_rate = TP / (TP +FN)' , inplace= True)
     print(pre_pd)
     print(recall_pd)
-
+    # recall_pd['recall_rate'].apply(lambda x: x.astype(np.float64))
+    recall_rate_ave = np.mean(recall_pd['recall_rate'])
+    precision_rate_ave = np.mean(pre_pd['precision_rate'])
+    F1_score = 2*precision_rate_ave*recall_rate_ave / (precision_rate_ave + recall_rate_ave)
+    print(precision_rate_ave)
+    print(recall_rate_ave)
+    print(F1_score)
 
 
 
