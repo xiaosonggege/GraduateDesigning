@@ -195,7 +195,7 @@ class MultiClassifiers:
         # 交叉验证次数序号
         fold = 1
 
-        for train_data_index, cv_data_index in kf.split(self.__dataset_all):
+        for train_data_index, cv_data_index in kf.split(self.__dataset_sim):
             # 找到对应索引数据
             train_data, cv_data = self.__dataset_all[train_data_index], self.__dataset_all[cv_data_index]
 
