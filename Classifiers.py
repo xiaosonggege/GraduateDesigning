@@ -226,16 +226,14 @@ class MultiClassifiers:
         :param Threshold: type= (T_pre, T_rec, T_F1), 精确率、召回率和F1指标阈值
         :return: None
         '''
-        #初始化准确率、召回率、F1指数
-        precision_rate = 0
-        recall_rate = 0
-        F1_rate = 0
+        #初始化k折平均查准率，k折平均查全率，k折平均F1参数
+        precision_rate, recall_rate, F1_score = 0, 0, 0
         # k-fold对象,用于生成训练集和交叉验证集数据
         kf = model_selection.KFold(n_splits=5, shuffle=True, random_state=32)
         # 交叉验证次数序号
         fold = 1
 
-        for train_data_index, cv_data_index in kf.split(self.__dataset_sim):
+        for train_data_index, cv_data_index in kf.split(self.__dataset_all):
             # 找到对应索引数据
             train_data, cv_data = self.__dataset_all[train_data_index], self.__dataset_all[cv_data_index]
 
@@ -247,9 +245,11 @@ class MultiClassifiers:
             # 对验证集进行预测
             pred_cv = model.predict(cv_data[:, :-1])
             # 对验证数据进行指标评估
-            precision_rate = ((fold - 1) * precision_rate + precision_score(cv_data[:-1], pred_cv)) / fold
-            recall_rate = ((fold - 1) * recall_rate + recall_score(cv_data[:-1], pred_cv)) / fold
-            F1_rate = ((fold - 1) * F1_rate + f1_score(cv_data[:-1], pred_cv)) / fold
+            precision_rate_per, recall_rate_per, F1_score_per = MultiClassifiers.multi_metrics(cv_data[:-1], pred_cv, n_class= 6)
+
+            precision_rate = ((fold - 1) * precision_rate + precision_rate_per) / fold
+            recall_rate = ((fold - 1) * recall_rate_per) / fold
+            F1_rate = ((fold - 1) * F1_score + F1_score_per) / fold
 
             # print(cv_data[:, -1].shape, pred_cv.shape)
             # print(precision_score(cv_data[:-1], pred_cv))
