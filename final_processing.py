@@ -98,7 +98,7 @@ if __name__ == '__main__':
     # print(np.isnan(dataset_all).any())
     # print(dataset_all.dtype)
     #对SVM分类器进行十折交叉验证
-    model_main(dataset_all= dataset_all, dataset_sim= dataset_sim, operation= 'XGBoost')
+    model_main(dataset_all= dataset_all, dataset_sim= dataset_sim, operation= 'Adaboost')
 
 
 
