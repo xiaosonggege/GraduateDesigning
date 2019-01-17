@@ -104,7 +104,6 @@ class StatisticStack:
             np.sum((time_series - mean)**2) + 0.01
         return np.sum((series_1 - mean) * (series_2 - mean)) / e_mean2
 
-
     def __init__(self, time_series):
         '''
         构造函数
@@ -258,7 +257,6 @@ def data_main(path, num):
     # print(data_finally)
     # print(data_finally.shape)
 
-
 if __name__ == '__main__':
     #生成均衡和去噪后数据
     # for i in range(1, 7):
@@ -272,15 +270,15 @@ if __name__ == '__main__':
     # for i in range(1, 7):
     #     data_main(path= r'F:\GraduateDesigning\c_%s.pickle' % i, num= i)
     #组合6组和后四组数据得到最后数据集
-    # data_all = np.zeros(shape= (1250, 181))
-    # for i in range(3, 7):
-    #     data = LoadFile(p= r'F:\GraduateDesigning\c_%s_finallydata.pickle' % i)
-    #     # print(data[0, 0])
-    #     data_all = data if data_all.any() == 0 else np.vstack((data_all, data))
-    # SaveFile(data= data_all, savepickle_p= r'F:\GraduateDesigning\data_sim.pickle')
+    data_all = np.zeros(shape= (1250, 181))
+    for i in range(3, 7):
+        data = LoadFile(p= r'F:\GraduateDesigning\c_%s_finallydata.pickle' % i)
+        # print(data[0, 0])
+        data_all = data if data_all.any() == 0 else np.vstack((data_all, data))
+    SaveFile(data= data_all, savepickle_p= r'F:\GraduateDesigning\data_sim.pickle')
 
     #检查缺失值
-    data = LoadFile(p= r'F:\GraduateDesigning\data_all.pickle')
+    data = LoadFile(p= r'F:\GraduateDesigning\data_sim.pickle')
     # print(data[:, 171])
     nan = []
     for i in range(data.shape[-1]):

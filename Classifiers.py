@@ -51,7 +51,8 @@ class MultiClassifiers:
         '''
         recall = np.zeros(shape=(n_class, 2))
         precision = np.zeros(shape=(n_class, 2))
-        for i in range(1, n_class+1):
+        j = 0
+        for i in range(7-n_class, 7):
             precision_bool = np.where(prediction == i, 1, 0)
             faction_bool = np.where(faction == i, 1, 0)
             # 计算预测值标签为i的总数
@@ -62,18 +63,19 @@ class MultiClassifiers:
             precision_faction = (precision_bool & faction_bool)
             sum_consistently = np.sum(precision_faction)
             # 将实际值部分存入b_fact
-            recall[i - 1] = np.array([sum_consistently, sum_faction - sum_consistently])
-            precision[i - 1] = np.array([sum_consistently, sum_precision - sum_consistently])
-            # 将预测值部分存入a_pre
-        precision_pd = pd.DataFrame(data=precision, index=[i for i in range(1, 7)], columns=['TP', 'FP'])
+            recall[j] = np.array([sum_consistently, sum_faction - sum_consistently])
+            precision[j] = np.array([sum_consistently, sum_precision - sum_consistently])
+            j += 1
+
+        precision_pd = pd.DataFrame(data=precision, index=[i for i in range(7-n_class, 7)], columns=['TP', 'FP'])
         precision_pd.eval('precision_rate = TP / (TP + FP)', inplace=True)
-        recall_pd = pd.DataFrame(data=recall, index=[i for i in range(1, 7)], columns=['TP', 'FN'])
+        recall_pd = pd.DataFrame(data=recall, index=[i for i in range(7-n_class, 7)], columns=['TP', 'FN'])
         recall_pd.eval('recall_rate = TP / (TP +FN)', inplace=True)
         recall_rate_ave = np.mean(recall_pd['recall_rate'])
         precision_rate_ave = np.mean(precision_pd['precision_rate'])
         F1_score = 2 * precision_rate_ave * recall_rate_ave / (precision_rate_ave + recall_rate_ave)
-        # print(precision_pd)
-        # print(recall_pd)
+        print(precision_pd)
+        print(recall_pd)
         # print(precision_rate_ave)
         # print(recall_rate_ave)
         # print(F1_score)
@@ -233,9 +235,10 @@ class MultiClassifiers:
         # 交叉验证次数序号
         fold = 1
 
-        for train_data_index, cv_data_index in kf.split(self.__dataset_all):
+        for train_data_index, cv_data_index in kf.split(self.__dataset_sim):
             # 找到对应索引数据
-            train_data, cv_data = self.__dataset_all[train_data_index], self.__dataset_all[cv_data_index]
+            train_data, cv_data = self.__dataset_sim[train_data_index], self.__dataset_sim[cv_data_index]
+            # print(np.isnan(train_data).any(), np.isnan(cv_data).any())
 
             # 训练数据
             model.fit(X=train_data[:, :-1], y=train_data[:, -1])
@@ -245,7 +248,7 @@ class MultiClassifiers:
             # 对验证集进行预测
             pred_cv = model.predict(cv_data[:, :-1])
             # 对验证数据进行指标评估
-            precision_rate_per, recall_rate_per, F1_score_per = MultiClassifiers.multi_metrics(cv_data[:-1], pred_cv, n_class= 6)
+            precision_rate_per, recall_rate_per, F1_score_per = MultiClassifiers.multi_metrics(cv_data[:, -1], pred_cv, n_class= 4)
 
             precision_rate = ((fold - 1) * precision_rate + precision_rate_per) / fold
             recall_rate = ((fold - 1) * recall_rate + recall_rate_per) / fold
@@ -254,6 +257,7 @@ class MultiClassifiers:
             # print(cv_data[:, -1].shape, pred_cv.shape)
             # print(precision_score(cv_data[:-1], pred_cv))
             # print(model.score(cv_data[:, :-1], cv_data[:, -1]))
+            # print(cv_data[:, -1].shape, pred_cv.shape)
 
             fold += 1
 
