@@ -120,7 +120,7 @@ if __name__ == '__main__':
     pre_pd = pd.DataFrame(data= pre, index= [i for i in range(1, 7)], columns= ['TP', 'FP'])
     pre_pd.eval('precision_rate = TP / (TP + FP)', inplace= True)
     recall_pd = pd.DataFrame(data= recall, index= [i for i in range(1, 7)], columns= ['TP', 'FN'])
-    recall_pd.eval('recall_rate = TP / (TP +FN)' , inplace= True)
+    recall_pd.eval('recall_rate = TP / (TP + FN)' , inplace= True)
     print(pre_pd)
     print(recall_pd)
     # recall_pd['recall_rate'].apply(lambda x: x.astype(np.float64))

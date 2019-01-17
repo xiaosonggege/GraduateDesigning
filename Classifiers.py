@@ -47,7 +47,7 @@ class MultiClassifiers:
         :param faction: 实际值标签
         :param prediction: 预测值标签
         :param n_class: 类别数
-        :return: tuple= (precision_rate, recall_rate, F1_score)
+        :return: tuple= (precision_rate, recall_rate, F1_score, precision_pd, recall_pd)
         '''
         recall = np.zeros(shape=(n_class, 2))
         precision = np.zeros(shape=(n_class, 2))
@@ -70,7 +70,7 @@ class MultiClassifiers:
         precision_pd = pd.DataFrame(data=precision, index=[i for i in range(7-n_class, 7)], columns=['TP', 'FP'])
         precision_pd.eval('precision_rate = TP / (TP + FP)', inplace=True)
         recall_pd = pd.DataFrame(data=recall, index=[i for i in range(7-n_class, 7)], columns=['TP', 'FN'])
-        recall_pd.eval('recall_rate = TP / (TP +FN)', inplace=True)
+        recall_pd.eval('recall_rate = TP / (TP + FN)', inplace=True)
         recall_rate_ave = np.mean(recall_pd['recall_rate'])
         precision_rate_ave = np.mean(precision_pd['precision_rate'])
         F1_score = 2 * precision_rate_ave * recall_rate_ave / (precision_rate_ave + recall_rate_ave)
@@ -79,7 +79,7 @@ class MultiClassifiers:
         # print(precision_rate_ave)
         # print(recall_rate_ave)
         # print(F1_score)
-        return tuple([precision_rate_ave, recall_rate_ave, F1_score])
+        return tuple([precision_rate_ave, recall_rate_ave, F1_score, precision_pd, recall_pd])
 
     @classmethod
     def multi_SVM(cls, kernel, C, decision_function_shape, tol):
@@ -228,6 +228,11 @@ class MultiClassifiers:
         :param Threshold: type= (T_pre, T_rec, T_F1), 精确率、召回率和F1指标阈值
         :return: None
         '''
+        #输出化数据表格
+        statistic_table = pd.DataFrame(data= np.zeros(shape= (4, 3)), index= ['Subway', 'Train', 'Bus', 'Car'],
+                                       columns= ['precision', 'recall', 'F1'])
+        statistic_table = statistic_table.apply(lambda x: x.astype(np.float64))
+
         #初始化k折平均查准率，k折平均查全率，k折平均F1参数
         precision_rate, recall_rate, F1_rate = 0, 0, 0
         # k-fold对象,用于生成训练集和交叉验证集数据
@@ -248,18 +253,28 @@ class MultiClassifiers:
             # 对验证集进行预测
             pred_cv = model.predict(cv_data[:, :-1])
             # 对验证数据进行指标评估
-            precision_rate_per, recall_rate_per, F1_score_per = MultiClassifiers.multi_metrics(cv_data[:, -1], pred_cv, n_class= 4)
+            precision_rate_per, recall_rate_per, F1_score_per, precision_pd, recall_pd = MultiClassifiers.multi_metrics(cv_data[:, -1], pred_cv, n_class= 4)
+            precision_pd = precision_pd.apply(lambda x: x.astype(np.float64))
+            recall_pd = recall_pd.apply(lambda x: x.astype(np.float64))
 
             precision_rate = ((fold - 1) * precision_rate + precision_rate_per) / fold
             recall_rate = ((fold - 1) * recall_rate + recall_rate_per) / fold
             F1_rate = ((fold - 1) * F1_rate + F1_score_per) / fold
 
-            # print(cv_data[:, -1].shape, pred_cv.shape)
-            # print(precision_score(cv_data[:-1], pred_cv))
-            # print(model.score(cv_data[:, :-1], cv_data[:, -1]))
-            # print(cv_data[:, -1].shape, pred_cv.shape)
+            #迭代填表precision、recall
+            statistic_table['precision'] = ((fold - 1) * np.array(statistic_table['precision']) + np.array(precision_pd['precision_rate'])) / fold
+            statistic_table['recall'] = ((fold - 1) * np.array(statistic_table['recall']) + np.array(recall_pd['recall_rate'])) / fold
 
             fold += 1
+
+        #计算每种交通模式F1参数并存为xlsx格式表格
+        statistic_table['F1'] = 2 * np.array(statistic_table['precision']) * np.array(statistic_table['recall']) / (np.array(statistic_table['precision'])
+                                                                                                                         + np.array(statistic_table['recall']))
+        # print(statistic_table)
+        # statistic_table.to_excel(r'F:\GraduateDesigning\dataframe\Adaboost.xlsx')
+        statistic_table.to_excel(r'F:\GraduateDesigning\dataframe\XGBoost.xlsx')
+        # statistic_table.to_excel(r'F:\GraduateDesigning\dataframe\SVM.xlsx')
+
 
         print('模型 %s在验证集上的性能指标为: 准确率- %.8f, 召回率- %.8f, F1指标- %.8f' %
                 (model_name, precision_rate, recall_rate, F1_rate))

@@ -18,6 +18,7 @@ from matplotlib import pyplot as plt
 from sklearn.manifold import TSNE
 from Classifiers import MultiClassifiers
 from data_operation import LoadFile
+import xgboost as xgb
 import os
 os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin'
 
@@ -43,12 +44,18 @@ def model_main(dataset_all, dataset_sim, operation):
                                                    algorithm='SAMME.R', n_estimators=100, learning_rate=1e-2)
         multiclassifiers.training_main(model_name='Adaboost分类器', model=Adaboost)
 
+
     elif operation == 'XGBoost':
         #XGBoost分类器训练
         XGBoost = MultiClassifiers.multi_XGBoost(max_depth=2, learning_rate=1e-2, n_estimators=100,
                                                  objective='binary:logistic', nthread=4, gamma=0.1,
                                                  min_child_weight=1, subsample=1, reg_lambda=2, scale_pos_weight=1.)
         multiclassifiers.training_main(model_name='XGBoost分类器', model=XGBoost)
+        digraph = xgb.to_graphviz(XGBoost, num_trees=2)
+        digraph.format = 'png'
+        digraph.view('./traffic_xgb')
+        xgb.plot_importance(XGBoost)
+        plt.show()
 
     else:
         #t-SNE降维可视化
@@ -89,8 +96,8 @@ def cdf_picture(statistic_data, data_name):
 
 if __name__ == '__main__':
     #加载数据
-    dataset_all = LoadFile(p= r'F:\GraduateDesigning\data_all.pickle')
-    dataset_sim = LoadFile(p= r'F:\GraduateDesigning\data_sim.pickle')
+    dataset_all = LoadFile(p= r'F:\GraduateDesigning\data\data_all.pickle')
+    dataset_sim = LoadFile(p= r'F:\GraduateDesigning\data\data_sim.pickle')
     np.random.shuffle(dataset_all)
     np.random.shuffle(dataset_sim)
     # print(dataset_all[:2, -1])
