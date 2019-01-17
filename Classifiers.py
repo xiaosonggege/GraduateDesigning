@@ -311,18 +311,18 @@ if __name__ == '__main__':
     print(X_tsne.shape)
     x_min, x_max = X_tsne.min(0), X_tsne.max(0)
     X_norm = (X_tsne - x_min) / (x_max - x_min)  # 归一化
-    # plt.figure(figsize=(8, 8))
-    # for i in range(X_norm.shape[0]):
-    #     if y[i] == 1:
-    #         color = 'r'
-    #     elif y[i] == 2:
-    #         color = 'g'
-    #     else:
-    #         color = 'c'
-    #     plt.scatter(x= X_norm[i, 0], y= X_norm[i, -1], color= color)
-    # # plt.scatter(x= X_norm[:, 0], y= X_norm[:, 1])
-    # plt.xticks([])
-    # plt.yticks([])
+    plt.figure(figsize=(8, 8))
+    for i in range(X_norm.shape[0]):
+        if y[i] == 1:
+            color = 'r'
+        elif y[i] == 2:
+            color = 'g'
+        else:
+            color = 'c'
+        plt.scatter(x= X_norm[i, 0], y= X_norm[i, -1], color= color)
+    # plt.scatter(x= X_norm[:, 0], y= X_norm[:, 1])
+    plt.xticks([])
+    plt.yticks([])
     ax = plt.figure('t-SNE-3D').add_subplot(111, projection='3d')
     for i in range(X_norm.shape[0]):
         if y[i] == 1:
