@@ -15,6 +15,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import precision_score, recall_score, f1_score
 from xgboost import plot_importance
 from matplotlib import pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from sklearn.manifold import TSNE
 from Classifiers import MultiClassifiers
 from data_operation import LoadFile
@@ -61,14 +62,39 @@ def model_main(dataset_all, dataset_sim, operation):
         #t-SNE降维可视化
         tsne = MultiClassifiers.t_SNE(n_components=2, init='pca')
         X_tsne = tsne.fit_transform(dataset_sim[:, :-1])
-        x_min, x_max = X_tsne.min(0), X_tsne.max(0)
-        X_norm = (X_tsne - x_min) / (x_max - x_min)  # 归一化
-        plt.figure('t-SNE')
-        for i in range(X_norm.shape[0]):
-            plt.text(X_norm[i, 0], X_norm[i, 1], str(dataset_sim[:, -1][i]), color=plt.cm.Set1(dataset_sim[:, -1][i]),
-                     fontdict={'weight': 'bold', 'size': 9})
+        #归一化
+        X_tsne = (X_tsne - np.min(X_tsne, axis= 0)) / (np.max(X_tsne, axis= 0) - np.min(X_tsne, axis= 0))
+        print(X_tsne.shape)
+        #绘制二维
+        plt.figure('t-SNE-2D')
+        for i in range(X_tsne.shape[0]):
+            if dataset_sim[i, -1] == 3:
+                color= 'r'
+            elif dataset_sim[i, -1] == 4:
+                color= 'g'
+            elif dataset_sim[i, -1] == 5:
+                color= 'c'
+            else:
+                color= 'm'
+            plt.scatter(x= X_tsne[i, 0], y= X_tsne[i, -1], color= color)
         plt.xticks([])
         plt.yticks([])
+        #绘制三维
+        ax = plt.figure('t-SNE-3D').add_subplot(111, projection = '3d')
+        for i in range(X_tsne.shape[0]):
+            if dataset_sim[i, -1] == 3:
+                color= 'r'
+            elif dataset_sim[i, -1] == 4:
+                color= 'g'
+            elif dataset_sim[i, -1] == 5:
+                color= 'c'
+            else:
+                color= 'm'
+            ax.scatter(xs=X_tsne[i, 0], ys=X_tsne[i, 1], zs=X_tsne[i, -1], color=color)
+
+        ax.set_xlabel('X Label')
+        ax.set_ylabel('Y Label')
+        ax.set_zlabel('Z Label')
         plt.show()
 
 
@@ -105,7 +131,7 @@ if __name__ == '__main__':
     # print(np.isnan(dataset_all).any())
     # print(dataset_all.dtype)
     #对SVM分类器进行十折交叉验证
-    model_main(dataset_all= dataset_all, dataset_sim= dataset_sim, operation= 'Adaboost')
+    model_main(dataset_all= dataset_all, dataset_sim= dataset_sim, operation= 't-SNE')
 
 
 

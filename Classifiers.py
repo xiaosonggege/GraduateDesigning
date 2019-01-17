@@ -25,6 +25,7 @@ import numpy as np
 from sklearn.datasets import load_iris, load_digits
 from sklearn.model_selection import train_test_split
 from matplotlib import pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 class MultiClassifiers:
     __slots__ = ('__dataset_all', '__dataset_sim')
@@ -282,20 +283,20 @@ class MultiClassifiers:
 
 if __name__ == '__main__':
     # dataset = np.arange(50)
-    # multiclassifier = MultiClassifiers(dataset= dataset)
-    # digits = load_digits(n_class= 10)
-    # x, y = digits.data, digits.target
-    # #初始化image, image_h矩阵
-    # image = np.zeros(shape= (8, 8))
-    # image_h = np.zeros(shape= (8, 8*20))
-    # num = 0
-    # for i in range(20):
-    #     for j in range(20):
-    #         image = digits.images[num] if image.any() == 0 else np.hstack((image, digits.images[num]))
-    #         num += 1
-    #     # print(image.shape, image_h.shape)
-    #     image_h = image if image_h.any() == 0 else np.vstack((image_h, image))
-    #     image = np.zeros(shape= (8, 8))
+    # multiclassifier = MultiClassifiers(dataset_sim= dataset, dataset_all= np.arange(20))
+    digits = load_digits(n_class= 3)
+    x, y = digits.data, digits.target
+    #初始化image, image_h矩阵
+    image = np.zeros(shape= (8, 8))
+    image_h = np.zeros(shape= (8, 8*20))
+    num = 0
+    for i in range(20):
+        for j in range(20):
+            image = digits.images[num] if image.any() == 0 else np.hstack((image, digits.images[num]))
+            num += 1
+        # print(image.shape, image_h.shape)
+        image_h = image if image_h.any() == 0 else np.vstack((image_h, image))
+        image = np.zeros(shape= (8, 8))
 
     # print(x.shape, y.shape)
     # print(type(digits.images[0]))
@@ -305,19 +306,38 @@ if __name__ == '__main__':
     # plt.imshow(digits.images[2], cmap=plt.cm.binary)
     # plt.show()
 
-    # tsne = manifold.TSNE(n_components=2, init='pca', random_state=501)
-    # X_tsne = tsne.fit_transform(x)
-    # print(X_tsne.shape)
-    # x_min, x_max = X_tsne.min(0), X_tsne.max(0)
-    # X_norm = (X_tsne - x_min) / (x_max - x_min)  # 归一化
+    tsne = manifold.TSNE(n_components=3, init='pca', random_state=501)
+    X_tsne = tsne.fit_transform(x)
+    print(X_tsne.shape)
+    x_min, x_max = X_tsne.min(0), X_tsne.max(0)
+    X_norm = (X_tsne - x_min) / (x_max - x_min)  # 归一化
     # plt.figure(figsize=(8, 8))
     # for i in range(X_norm.shape[0]):
-    #     plt.text(X_norm[i, 0], X_norm[i, 1], str(y[i]), color=plt.cm.Set1(y[i]),
-    #              fontdict={'weight': 'bold', 'size': 9})
+    #     if y[i] == 1:
+    #         color = 'r'
+    #     elif y[i] == 2:
+    #         color = 'g'
+    #     else:
+    #         color = 'c'
+    #     plt.scatter(x= X_norm[i, 0], y= X_norm[i, -1], color= color)
+    # # plt.scatter(x= X_norm[:, 0], y= X_norm[:, 1])
     # plt.xticks([])
     # plt.yticks([])
-    # plt.show()
-    classifier = MultiClassifiers(dataset_all= np.arange(20), dataset_sim= np.arange(30))
+    ax = plt.figure('t-SNE-3D').add_subplot(111, projection='3d')
+    for i in range(X_norm.shape[0]):
+        if y[i] == 1:
+            color = 'r'
+        elif y[i] == 2:
+            color = 'g'
+        else:
+            color = 'b'
+        ax.scatter(xs=X_norm[i, 0], ys=X_norm[i, 1], zs=X_norm[i, -1], color= color)
+
+    ax.set_xlabel('X Label')
+    ax.set_ylabel('Y Label')
+    ax.set_zlabel('Z Label')
+    plt.show()
+    # classifier = MultiClassifiers(dataset_all= np.arange(20), dataset_sim= np.arange(30))
 
 
 
