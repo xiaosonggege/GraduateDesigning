@@ -60,41 +60,61 @@ def model_main(dataset_all, dataset_sim, operation):
 
     else:
         #t-SNE降维可视化
-        tsne = MultiClassifiers.t_SNE(n_components=2, init='pca')
+        mode = dict([('3', 'Subway'), ('4', 'Train'), ('5', 'Bus'), ('6', 'Car')])
+        tsne = MultiClassifiers.t_SNE(n_components=2, init='random')
         X_tsne = tsne.fit_transform(dataset_sim[:, :-1])
         #归一化
         X_tsne = (X_tsne - np.min(X_tsne, axis= 0)) / (np.max(X_tsne, axis= 0) - np.min(X_tsne, axis= 0))
         print(X_tsne.shape)
+        label = []
         #绘制二维
-        plt.figure('t-SNE-2D')
-        for i in range(X_tsne.shape[0]):
-            if dataset_sim[i, -1] == 3:
-                color= 'r'
-            elif dataset_sim[i, -1] == 4:
-                color= 'g'
-            elif dataset_sim[i, -1] == 5:
-                color= 'c'
-            else:
-                color= 'm'
-            plt.scatter(x= X_tsne[i, 0], y= X_tsne[i, -1], color= color)
-        plt.xticks([])
-        plt.yticks([])
+        # plt.figure('t-SNE-2D')
+        # for i in range(X_tsne.shape[0]):
+        #     if dataset_sim[i, -1] == 3:
+        #         color= 'r'
+        #         mode_per = mode['3']
+        #     elif dataset_sim[i, -1] == 4:
+        #         color= 'g'
+        #         mode_per = mode['4']
+        #     elif dataset_sim[i, -1] == 5:
+        #         color= 'c'
+        #         mode_per = mode['5']
+        #     else:
+        #         color= 'm'
+        #         mode_per = mode['6']
+        #     if mode_per not in label:
+        #         label.append(mode_per)
+        #         plt.scatter(x= X_tsne[i, 0], y= X_tsne[i, -1], color= color, label= mode_per)
+        #     else:
+        #         plt.scatter(x=X_tsne[i, 0], y=X_tsne[i, -1], color=color)
+        # plt.xticks([])
+        # plt.yticks([])
+        # plt.legend()
         #绘制三维
         ax = plt.figure('t-SNE-3D').add_subplot(111, projection = '3d')
         for i in range(X_tsne.shape[0]):
             if dataset_sim[i, -1] == 3:
                 color= 'r'
+                mode_per = mode['3']
             elif dataset_sim[i, -1] == 4:
                 color= 'g'
+                mode_per = mode['4']
             elif dataset_sim[i, -1] == 5:
                 color= 'c'
+                mode_per = mode['5']
             else:
                 color= 'm'
-            ax.scatter(xs=X_tsne[i, 0], ys=X_tsne[i, 1], zs=X_tsne[i, -1], color=color)
+                mode_per = mode['6']
+            if mode_per not in label:
+                label.append(mode_per)
+                ax.scatter(xs=X_tsne[i, 0], ys=X_tsne[i, 1], zs=X_tsne[i, -1], color=color, label= mode_per)
+            else:
+                ax.scatter(xs=X_tsne[i, 0], ys=X_tsne[i, 1], zs=X_tsne[i, -1], color=color)
 
         ax.set_xlabel('X Label')
         ax.set_ylabel('Y Label')
         ax.set_zlabel('Z Label')
+        ax.legend()
         plt.show()
 
 if __name__ == '__main__':
@@ -108,7 +128,7 @@ if __name__ == '__main__':
     # print(np.isnan(dataset_all).any())
     # print(dataset_all.dtype)
     #对SVM分类器进行十折交叉验证
-    model_main(dataset_all= dataset_all, dataset_sim= dataset_sim, operation= 'Adaboost')
+    model_main(dataset_all= dataset_all, dataset_sim= dataset_sim, operation= 't-SNE')
 
 
 
