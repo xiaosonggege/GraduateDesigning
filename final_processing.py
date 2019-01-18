@@ -97,29 +97,6 @@ def model_main(dataset_all, dataset_sim, operation):
         ax.set_zlabel('Z Label')
         plt.show()
 
-
-
-def demention(t_sne, dataset):
-    '''
-    对数据进行可视化
-    :param t_sne: t-SNE降维类型
-    :param dataset: 待可视化数据集
-    :return: None
-    '''
-    pass
-
-def cdf_picture(statistic_data, data_name):
-    '''
-    对统计量进行CDF绘图
-    :param statistic_data: 待统计数据
-    :param data_name: 统计量名称
-    :return: None
-    '''
-    picture = plt.figure(data_name)
-    hist = plt.hist(x= statistic_data, bins= 100, normed= True, cumulative= True, histtype= 'step')
-    plt.show()
-
-
 if __name__ == '__main__':
     #加载数据
     dataset_all = LoadFile(p= r'F:\GraduateDesigning\data\data_all.pickle')
