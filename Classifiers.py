@@ -48,10 +48,11 @@ class MultiClassifiers:
         :param faction: 实际值标签
         :param prediction: 预测值标签
         :param n_class: 类别数
-        :return: tuple= (precision_rate, recall_rate, F1_score, precision_pd, recall_pd)
+        :return: tuple= (precision_rate, recall_rate, F1_score, precision_pd, recall_pd, accuracy)
         '''
         recall = np.zeros(shape=(n_class, 2))
         precision = np.zeros(shape=(n_class, 2))
+        accuracy = np.zeros(shape= (n_class, 1))
         j = 0
         for i in range(7-n_class, 7):
             precision_bool = np.where(prediction == i, 1, 0)
@@ -60,12 +61,17 @@ class MultiClassifiers:
             sum_precision = np.sum(precision_bool)
             # 计算实际值标签为i的总数
             sum_faction = np.sum(faction_bool)
-            # 计算实际值和预测值一致的总数
+            # 计算实际为i预测为i的样本总数
             precision_faction = (precision_bool & faction_bool)
             sum_consistently = np.sum(precision_faction)
-            # 将实际值部分存入b_fact
+            #计算准确率时需要对应为相同取1，不同取0
+            accuracy_faction = (precision_bool & faction_bool) | \
+                               (np.where(precision_bool, 0, 1) & np.where(faction_bool, 0, 1))
+            accuracy_i = np.sum(accuracy_faction) / accuracy_faction.shape[0]
+            # 将实际值部分存入
             recall[j] = np.array([sum_consistently, sum_faction - sum_consistently])
             precision[j] = np.array([sum_consistently, sum_precision - sum_consistently])
+            accuracy[j] = accuracy_i
             j += 1
 
         precision_pd = pd.DataFrame(data=precision, index=[i for i in range(7-n_class, 7)], columns=['TP', 'FP'])
@@ -80,7 +86,7 @@ class MultiClassifiers:
         # print(precision_rate_ave)
         # print(recall_rate_ave)
         # print(F1_score)
-        return tuple([precision_rate_ave, recall_rate_ave, F1_score, precision_pd, recall_pd])
+        return tuple([precision_rate_ave, recall_rate_ave, F1_score, precision_pd, recall_pd, accuracy])
 
     @classmethod
     def multi_SVM(cls, kernel, C, decision_function_shape, tol):
@@ -230,8 +236,8 @@ class MultiClassifiers:
         :return: None
         '''
         #输出化数据表格
-        statistic_table = pd.DataFrame(data= np.zeros(shape= (4, 3)), index= ['Subway', 'Train', 'Bus', 'Car'],
-                                       columns= ['precision', 'recall', 'F1'])
+        statistic_table = pd.DataFrame(data= np.zeros(shape= (4, 4)), index= ['Subway', 'Train', 'Bus', 'Car'],
+                                       columns= ['precision', 'recall', 'F1', 'Accuracy'])
         statistic_table = statistic_table.apply(lambda x: x.astype(np.float64))
 
         #初始化k折平均查准率，k折平均查全率，k折平均F1参数
@@ -254,7 +260,8 @@ class MultiClassifiers:
             # 对验证集进行预测
             pred_cv = model.predict(cv_data[:, :-1])
             # 对验证数据进行指标评估
-            precision_rate_per, recall_rate_per, F1_score_per, precision_pd, recall_pd = MultiClassifiers.multi_metrics(cv_data[:, -1], pred_cv, n_class= 4)
+            precision_rate_per, recall_rate_per, F1_score_per, precision_pd, recall_pd, accuracy = \
+                MultiClassifiers.multi_metrics(cv_data[:, -1], pred_cv, n_class= 4)
             precision_pd = precision_pd.apply(lambda x: x.astype(np.float64))
             recall_pd = recall_pd.apply(lambda x: x.astype(np.float64))
 
@@ -265,6 +272,7 @@ class MultiClassifiers:
             #迭代填表precision、recall
             statistic_table['precision'] = ((fold - 1) * np.array(statistic_table['precision']) + np.array(precision_pd['precision_rate'])) / fold
             statistic_table['recall'] = ((fold - 1) * np.array(statistic_table['recall']) + np.array(recall_pd['recall_rate'])) / fold
+            statistic_table['Accuracy'] = ((fold - 1) * np.array(statistic_table['Accuracy']) + accuracy) / fold
 
             fold += 1
 
@@ -272,8 +280,8 @@ class MultiClassifiers:
         statistic_table['F1'] = 2 * np.array(statistic_table['precision']) * np.array(statistic_table['recall']) / (np.array(statistic_table['precision'])
                                                                                                                          + np.array(statistic_table['recall']))
         # print(statistic_table)
-        # statistic_table.to_excel(r'F:\GraduateDesigning\dataframe\Adaboost.xlsx')
-        statistic_table.to_excel(r'F:\GraduateDesigning\dataframe\XGBoost.xlsx')
+        statistic_table.to_excel(r'F:\GraduateDesigning\dataframe\Adaboost.xlsx')
+        # statistic_table.to_excel(r'F:\GraduateDesigning\dataframe\XGBoost.xlsx')
         # statistic_table.to_excel(r'F:\GraduateDesigning\dataframe\SVM.xlsx')
 
 
