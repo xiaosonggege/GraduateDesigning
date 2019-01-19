@@ -25,99 +25,99 @@ XGBoost = np.array(XGBoost)
 
 mode = ['Subway', 'Train', 'Bus', 'Car']
 #Adaboost-precision
-# picture = plt.figure(r'Adaboost-precision')
-# y = Adaboost[:, 0]
-# index = np.arange(4)
-# bar_width = 0.35
-# opacity = 0.5
-# plt.bar(index, y, bar_width, alpha=opacity,
-#         color='olive', label='precision')
-# plt.xticks(index, mode)
-# plt.legend()
-# plt.grid(linestyle='--')
-# plt.ylim(0, 1.2)
-# for a, b in zip(index - 0.15, y):
-#     plt.text(a, b + 0.01, '%.2f%%' % b)
+picture = plt.figure(r'Adaboost-precision')
+y = Adaboost[:, 0]
+index = np.arange(4)
+bar_width = 0.35
+opacity = 0.5
+plt.bar(index, y, bar_width, alpha=opacity,
+        color='olive', label='precision')
+plt.xticks(index, mode)
+plt.legend()
+plt.grid(linestyle='--')
+plt.ylim(0, 1.2)
+for a, b in zip(index - 0.15, y):
+    plt.text(a, b + 0.01, '%.2f%%' % b)
 # plt.show()
 
-#Adaboost-recall
-# picture = plt.figure(r'Adaboost-recall')
-# y = Adaboost[:, 1]
-# index = np.arange(4)
-# bar_width = 0.35
-# opacity = 0.5
-# plt.bar(index, y, bar_width, alpha=opacity,
-#         color='c', label='recall')
-# plt.xticks(index, mode)
-# plt.legend()
-# plt.grid(linestyle='--')
-# plt.ylim(0, 1.2)
-# for a, b in zip(index - 0.15, y):
-#     plt.text(a, b + 0.01, '%.2f%%' % b)
+# Adaboost-recall
+picture = plt.figure(r'Adaboost-recall')
+y = Adaboost[:, 1]
+index = np.arange(4)
+bar_width = 0.35
+opacity = 0.5
+plt.bar(index, y, bar_width, alpha=opacity,
+        color='c', label='recall')
+plt.xticks(index, mode)
+plt.legend()
+plt.grid(linestyle='--')
+plt.ylim(0, 1.2)
+for a, b in zip(index - 0.15, y):
+    plt.text(a, b + 0.01, '%.2f%%' % b)
 # plt.show()
 
-#Adaboost-F1
-# picture = plt.figure(r'Adaboost-F1')
-# y = Adaboost[:, -1]
-# index = np.arange(4)
-# bar_width = 0.35
-# opacity = 0.5
-# plt.bar(index, y, bar_width, alpha=opacity,
-#         color='r', label='F1')
-# plt.xticks(index, mode)
-# plt.legend()
-# plt.grid(linestyle='--')
-# plt.ylim(0, 1.2)
-# for a, b in zip(index - 0.15, y):
-#     plt.text(a, b + 0.01, '%.2f%%' % b)
+# Adaboost-F1
+picture = plt.figure(r'Adaboost-F1')
+y = Adaboost[:, -1]
+index = np.arange(4)
+bar_width = 0.35
+opacity = 0.5
+plt.bar(index, y, bar_width, alpha=opacity,
+        color='r', label='F1')
+plt.xticks(index, mode)
+plt.legend()
+plt.grid(linestyle='--')
+plt.ylim(0, 1.2)
+for a, b in zip(index - 0.15, y):
+    plt.text(a, b + 0.01, '%.2f%%' % b)
 # plt.show()
 
-#XGBoost-precision
-# picture = plt.figure(r'XGBoost-precision')
-# y = XGBoost[:, 0]
-# index = np.arange(4)
-# bar_width = 0.35
-# opacity = 0.5
-# plt.bar(index, y, bar_width, alpha=opacity,
-#         color='c', label='precision')
-# plt.xticks(index, mode)
-# plt.legend()
-# plt.grid(linestyle='--')
-# plt.ylim(0, 1.2)
-# for a, b in zip(index - 0.15, y):
-#     plt.text(a, b + 0.01, '%.2f%%' % b)
+# XGBoost-precision
+picture = plt.figure(r'XGBoost-precision')
+y = XGBoost[:, 0]
+index = np.arange(4)
+bar_width = 0.35
+opacity = 0.5
+plt.bar(index, y, bar_width, alpha=opacity,
+        color='c', label='precision')
+plt.xticks(index, mode)
+plt.legend()
+plt.grid(linestyle='--')
+plt.ylim(0, 1.2)
+for a, b in zip(index - 0.15, y):
+    plt.text(a, b + 0.01, '%.2f%%' % b)
 # plt.show()
 
-#XGBoost-recall
-# picture = plt.figure(r'XGBoost-recall')
-# y = XGBoost[:, 1]
-# index = np.arange(4)
-# bar_width = 0.35
-# opacity = 0.5
-# plt.bar(index, y, bar_width, alpha=opacity,
-#         color='m', label='recall')
-# plt.xticks(index, mode)
-# plt.legend()
-# plt.grid(linestyle='--')
-# plt.ylim(0, 1.2)
-# for a, b in zip(index - 0.15, y):
-#     plt.text(a, b + 0.01, '%.2f%%' % b)
+# XGBoost-recall
+picture = plt.figure(r'XGBoost-recall')
+y = XGBoost[:, 1]
+index = np.arange(4)
+bar_width = 0.35
+opacity = 0.5
+plt.bar(index, y, bar_width, alpha=opacity,
+        color='m', label='recall')
+plt.xticks(index, mode)
+plt.legend()
+plt.grid(linestyle='--')
+plt.ylim(0, 1.2)
+for a, b in zip(index - 0.15, y):
+    plt.text(a, b + 0.01, '%.2f%%' % b)
 # plt.show()
 
-#XGBoost-F1
-# picture = plt.figure(r'XGBoost-F1')
-# y = XGBoost[:, -1]
-# index = np.arange(4)
-# bar_width = 0.35
-# opacity = 0.5
-# plt.bar(index, y, bar_width, alpha=opacity,
-#         color='g', label='F1')
-# plt.xticks(index, mode)
-# plt.legend()
-# plt.grid(linestyle='--')
-# plt.ylim(0, 1.2)
-# for a, b in zip(index - 0.15, y):
-#     plt.text(a, b + 0.01, '%.2f%%' % b)
+# XGBoost-F1
+picture = plt.figure(r'XGBoost-F1')
+y = XGBoost[:, -1]
+index = np.arange(4)
+bar_width = 0.35
+opacity = 0.5
+plt.bar(index, y, bar_width, alpha=opacity,
+        color='g', label='F1')
+plt.xticks(index, mode)
+plt.legend()
+plt.grid(linestyle='--')
+plt.ylim(0, 1.2)
+for a, b in zip(index - 0.15, y):
+    plt.text(a, b + 0.01, '%.2f%%' % b)
 # plt.show()
 
 # #SVM-precision
@@ -195,27 +195,21 @@ def cdf_picture(statistic_data):
     return cdf
 
 
-# path = r'F:\GraduateDesigning\data\data_sim.pickle'
-# data_sim = LoadFile(p= path)
-# print(data_sim)
-# plt.figure('CDF')
-# linestyle = ['--', '-.', ':', '-']
-# marker = ['*', 's', 'd', 'v']
-# color = ['r', 'g', 'b', 'c']
-# j = 0
-# for i in range(0, data_sim.shape[0], 1250):
-#     sub_series = data_sim[i:i+1250, -30]
-#     cdf = cdf_picture(sub_series)
-#     cdf = (cdf - np.min(cdf)) / (np.max(cdf) - np.min(cdf))
-#     plt.plot(cdf, linestyle= linestyle[j], color= color[j], marker= marker[j], label= mode[j])
-#     j += 1
-# plt.ylabel('CDF')
-# plt.legend()
-# plt.show()
-# plt.figure()
-# cdf = cdf_picture(data_sim[:1250, 3])
-# cdf = (cdf - np.min(cdf)) / (np.max(cdf) - np.min(cdf))
-# plt.plot(cdf)
-# plt.show()
-# print(cdf)
+path = r'F:\GraduateDesigning\data\data_sim.pickle'
+data_sim = LoadFile(p= path)
+print(data_sim)
+plt.figure('CDF')
+linestyle = ['--', '-.', ':', '-']
+marker = ['*', 's', 'd', 'v']
+color = ['r', 'g', 'b', 'c']
+j = 0
+for i in range(0, data_sim.shape[0], 1250):
+    sub_series = data_sim[i:i+1250, -30]
+    cdf = cdf_picture(sub_series)
+    cdf = (cdf - np.min(cdf)) / (np.max(cdf) - np.min(cdf))
+    plt.plot(cdf, linestyle= linestyle[j], color= color[j], marker= marker[j], label= mode[j])
+    j += 1
+plt.ylabel('CDF')
+plt.legend()
+plt.show()
 
