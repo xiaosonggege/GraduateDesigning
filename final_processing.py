@@ -20,6 +20,7 @@ from sklearn.manifold import TSNE
 from Classifiers import MultiClassifiers
 from data_operation import LoadFile
 import xgboost as xgb
+from sklearn.preprocessing import Imputer
 import os
 os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin'
 
@@ -37,18 +38,18 @@ def model_main(dataset_all, dataset_sim, operation):
     multiclassifiers = MultiClassifiers(dataset_all=dataset_all, dataset_sim=dataset_sim)
     if operation == 'SVM':
         #SVM分类器训练
-        SVM = MultiClassifiers.multi_SVM(kernel= 'linear', C= 2, decision_function_shape= 'ovo', tol= 1e-1)
+        SVM = MultiClassifiers.multi_SVM(kernel= 'rbf', C= 1.0, decision_function_shape= 'ovo', tol= 1e-2)
         multiclassifiers.training_main(model_name= 'SVM分类器', model= SVM)
     elif operation == 'Adaboost':
         #Adaboost分类器训练
         Adaboost = MultiClassifiers.multi_Adaboost(max_depth=2, min_samples_split=2, min_samples_leaf=1,
-                                                   algorithm='SAMME.R', n_estimators=100, learning_rate=1e-2)
+                                                   algorithm='SAMME.R', n_estimators=500, learning_rate=1e-2)
         multiclassifiers.training_main(model_name='Adaboost分类器', model=Adaboost)
 
 
     elif operation == 'XGBoost':
         #XGBoost分类器训练
-        XGBoost = MultiClassifiers.multi_XGBoost(max_depth=2, learning_rate=1e-2, n_estimators=100,
+        XGBoost = MultiClassifiers.multi_XGBoost(max_depth=2, learning_rate=1e-2, n_estimators=200,
                                                  objective='binary:logistic', nthread=4, gamma=0.1,
                                                  min_child_weight=1, subsample=1, reg_lambda=2, scale_pos_weight=1.)
         multiclassifiers.training_main(model_name='XGBoost分类器', model=XGBoost)
@@ -119,16 +120,17 @@ def model_main(dataset_all, dataset_sim, operation):
 
 if __name__ == '__main__':
     #加载数据
-    dataset_all = LoadFile(p= r'F:\GraduateDesigning\data\data_all.pickle')
-    dataset_sim = LoadFile(p= r'F:\GraduateDesigning\data\data_sim.pickle')
-    np.random.shuffle(dataset_all)
+    dataset_sim = LoadFile(p= r'F:\GraduateDesigning\finalDataset\data_sim.pickle')
+
+    imp = Imputer(missing_values='NaN', strategy='mean', axis=0, verbose=0, copy=True)
+    dataset_sim = imp.fit_transform(dataset_sim)
     np.random.shuffle(dataset_sim)
     # print(dataset_all[:2, -1])
     # data_all = pd.DataFrame(data= dataset_all)
     # print(np.isnan(dataset_all).any())
     # print(dataset_all.dtype)
     #对SVM分类器进行十折交叉验证
-    model_main(dataset_all= dataset_all, dataset_sim= dataset_sim, operation= 't-SNE')
+    model_main(dataset_all= dataset_sim, dataset_sim= dataset_sim, operation= 'Adaboost')
 
 
 

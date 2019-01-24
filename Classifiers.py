@@ -280,9 +280,9 @@ class MultiClassifiers:
         statistic_table['F1'] = 2 * np.array(statistic_table['precision']) * np.array(statistic_table['recall']) / (np.array(statistic_table['precision'])
                                                                                                                          + np.array(statistic_table['recall']))
         # print(statistic_table)
-        statistic_table.to_excel(r'F:\GraduateDesigning\dataframe\Adaboost.xlsx')
-        # statistic_table.to_excel(r'F:\GraduateDesigning\dataframe\XGBoost.xlsx')
-        # statistic_table.to_excel(r'F:\GraduateDesigning\dataframe\SVM.xlsx')
+        # statistic_table.to_excel(r'F:\GraduateDesigning\ClassifierResult\Adaboost.xlsx')
+        # statistic_table.to_excel(r'F:\GraduateDesigning\ClassifierResult\XGBoost.xlsx')
+        statistic_table.to_excel(r'F:\GraduateDesigning\ClassifierResult\SVM.xlsx')
 
 
         print('模型 %s在验证集上的性能指标为: 准确率- %.8f, 召回率- %.8f, F1指标- %.8f' %
