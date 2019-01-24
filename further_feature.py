@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from numpy import random as ra
 import pickle
 from scipy import stats
+from data_operation import LoadFile, SaveFile
 
 #峰特征类
 class Peak:
@@ -55,7 +56,7 @@ class Peak:
         self.__start_Th = start_Th
         self.__end_Th = end_Th
         self.__peak_area_formmer = peak_area_formmer
-        self.__segfeature = [] #用于存储峰特征，indexs: peakfeature, columns: feature
+        self.__segfeature = np.zeros(shape= (1, 5)) #用于存储峰特征，indexs: peakfeature, columns: feature
         self.__peakfeatureformmer = [] #用于存储起始点在前一个窗口中的峰值区域
 
     def find_peak_areas(self):
@@ -86,37 +87,56 @@ class Peak:
             if start_point != None or prefix_left: #确保峰值区域起始点已经找到
                 if pre_mean > self.__end_Th and late_mean < self.__start_Th :
                     end_point = position
-                region.append((start_point, end_point)) #注意start_point可能为-1
-                start_point, end_point = None, None
+                    region.append((start_point, end_point)) #注意region第一个元组元素的start_point可能为-1
+                    start_point, end_point = None, None
+                    if prefix_left:
+                        prefix_left = 0
 
         # 判断峰值区域是否在该窗口中结束
         if start_point != None and end_point == None:
             sub_peak_area = self.__scan_series[start_point:] if not prefix_left else \
-                np.hstack((self.__peak_area_formmer.pop(), self.__scan_series[:]))
+                np.hstack((self.__peak_area_formmer.pop(), self.__scan_series.copy()))
             self.__peakfeatureformmer.append(sub_peak_area)
 
         return tuple(region), self.__peakfeatureformmer
 
+    def PeakFeatureExtract(self, region, peakfeatureformmer):
+        '''
+        提取峰值特征
+        :param region:  存储所有峰值区域起始点作为元素的元组
+        :param peakfeatureformmer: 存储峰值区域未结束的前半部分的列表, 可以为空
+        :return: 峰值特征向量、峰特征存储矩阵（用于计算段特征）
+        '''
+        #初始化峰特征向量均值
+        peakfeature_mean = np.zeros(shape= (1, 5))
+        echo = 0
+        for interval in region:
+            if interval[0] == -1:
+                series = np.hstack((peakfeatureformmer, self.__scan_series[: interval[-1]]))
+            else:
+                series = self.__scan_series[interval[0]: interval[-1]]
+            peakfeature = Peak.calc_feature(peak_area= series)
+            self.__segfeature = np.vstack((self.__segfeature, peakfeature))
+            peakfeature_mean = (peakfeature_mean * echo + peakfeature) / (echo + 1)
+        return peakfeature_mean, self.__segfeature
 
-
-def PeakFeatureExtract(data, window_length):
+def peak_main(p):
     '''
-    对数据中一定长度窗口中峰特征就行提取，并计算相关特征向量
-    :param data: 待处理数据， shape= (:, acc_h, acc_v)
-    :param window_length: 滑动窗口长度
-    :return: 特征向量数据集矩阵
+    峰特征、段特征提取主函数
+    :return: None
     '''
+    #导入数据(只导入一种交通模式数据)
+    dataset = LoadFile(p= p)
+    #取重力加速度水平和竖直分量
+    dataset_acc = dataset[:, [0, 1]] #shape= (500200, 2)
+    #非重叠滑动窗口，窗口长度为: 1200, 滑动距离为: 1200
 
-    #循环遍历数据中acc_h、acc_v两列数据并用滑动窗口找到峰值区域
-    peak_feature = np.zeros(shape= (1, 2*5))
-    for column in [0, 1]:
-        series = data[1:1 + window_length, column]
-        peak = Peak(scan_series=series, window_length=window_length, start_Th=0.2, end_Th=0.2)
-        peak_area_stack = peak.find_peak_areas()
-        #初始化peak_feature列
-        peak_feature_sub = np.zeros(shape=(1, 5))
-        for peak_area in peak_area_stack:
-            peak_feature_sub = peak.calc_feature(peak_area)
+        # #创建峰特征类对象
+        # peak = Peak(scan_series= , window_length= 1200, start_Th= 0.2, end_Th= 0.2, peak_area_formmer= )
+
+
+
+
 
 
 
