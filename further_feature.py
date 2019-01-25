@@ -120,19 +120,102 @@ class Peak:
             peakfeature_mean = (peakfeature_mean * echo + peakfeature) / (echo + 1)
         return peakfeature_mean, self.__segfeature
 
+    def segcalc(self, segfeature):
+        '''
+        计算段特征，判断如果存储峰特征的矩阵行数大于3时计算，否则为相同尺度的0向量
+        :param segfeature: 峰特征矩阵
+        :return: 当前窗口内的段特征
+        '''
+        if segfeature.shape[0] >= 3:
+            return np.var(segfeature, axis= 0)
+        else:
+            return np.zeros(shape= (1, 5))
+
 def peak_main(p):
     '''
     峰特征、段特征提取主函数
     :return: None
     '''
+    #初始化遗留峰值区域向量
+    peak_featureformmer = np.zeros(shape= (1, 1200))
     #导入数据(只导入一种交通模式数据)
     dataset = LoadFile(p= p)
     #取重力加速度水平和竖直分量
     dataset_acc = dataset[:, [0, 1]] #shape= (500200, 2)
-    #非重叠滑动窗口，窗口长度为: 1200, 滑动距离为: 1200
 
-        # #创建峰特征类对象
-        # peak = Peak(scan_series= , window_length= 1200, start_Th= 0.2, end_Th= 0.2, peak_area_formmer= )
+    #峰特征初始化（没有捕捉到峰值区域时峰特征对应位置均为0）
+    peak_feature_h, peak_feature_v = np.zeros(shape= (1, 5)), np.zeros(shape= (1, 5))
+
+    #初始化段特征向量（没有得到段特征的对应位置均为0），两倍峰特征提取时间的风特征矩阵初始化、以及段特征计算标志
+    seg_feature_h, seg_feature_v, twice_segfeature, seg_yes = \
+        np.zeros(shape= (1, 5)), np.zeros(shape= (1, 5)), np.zeros(shape= (1, 5)), 1
+
+    #非重叠滑动窗口，窗口长度为: 1200, 滑动距离为: 1200,水平和竖直分量都需要提取
+    for column_num in range(dataset_acc.shape[-1]):
+        for window_position in range(0, dataset_acc.shape[0] - 1200 + 1, 1200):
+            if window_position:
+                peak_area_formmer = []
+            else:
+                peak_area_formmer = peak_featureformmer
+                # 创建峰特征类对象
+            peak = Peak(scan_series=dataset_acc[window_position:window_position + 1200, column_num], window_length=1200,
+                        start_Th=0.2, end_Th=0.2, peak_area_formmer=peak_area_formmer)
+            # 得到峰值区域位置元组和未完峰值区域
+            region, peak_featureformmer = peak.find_peak_areas()
+            # 得到单列峰特征平均值和单列段特征矩阵
+            peakfeature_mean, segfeature = peak.PeakFeatureExtract(region=region, peakfeatureformmer=peak_featureformmer)
+            #5组峰特征为组成子特征矩阵
+            sub_peakfeature = np.vstack((np.zeros(shape= (4, 5)), peakfeature_mean))
+            if column_num:
+                peak_feature_h = sub_peakfeature if not window_position else np.vstack((peak_feature_h, sub_peakfeature))
+            else:
+                peak_feature_v = sub_peakfeature if not window_position else np.vstack((peak_feature_v, sub_peakfeature))
+
+            #得到单列段特征向量(每得到两组相邻峰特征矩阵后计算一次段特征)
+            if seg_yes == 1:
+                twice_segfeature = segfeature
+                seg_yes += 1
+            else:
+                twice_segfeature = np.vstack((twice_segfeature, segfeature))
+                sub_seg_feature = peak.segcalc(segfeature= twice_segfeature)
+                sub_seg_feature = np.vstack((np.zeros(shape= (9, 5)), sub_seg_feature))
+                if column_num:
+                    seg_feature_h = sub_seg_feature if not window_position else np.vstack(
+                        (seg_feature_h, sub_seg_feature))
+                else:
+                    seg_feature_v = sub_seg_feature if not window_position else np.vstack(
+                        (seg_feature_v, sub_seg_feature))
+
+                #计算段特征标志置1
+                seg_yes = 1
+                #twice_segfeature矩阵清空
+                twice_segfeature = np.zeros(shape= (1, 5))
+
+
+    #得到组合后的峰特征shape=（500200， 10）
+    peak_feature = np.hstack((peak_feature_h, peak_feature_v))
+    print(peak_feature.shape)
+
+    #得到组合后的段特征shape=（500200， 10）
+    seg_feature = np.hstack((seg_feature_h, seg_feature_v))
+    print(seg_feature.shape)
+
+    #得到峰特征和段特征的组合shape=（500200， 20）
+    peak_seg = np.hstack((peak_feature, seg_feature))
+    print(peak_seg.shape)
+
+if __name__ == '__main__':
+    for num in range(3, 7):
+        p = r'F:\GraduateDesigning\PreoperationData\c_preop_%s.pickle' % num
+        peak_main(p)
+
+
+
+
+
+
+
+
 
 
 
