@@ -260,32 +260,33 @@ def data_main(path, num):
 
 if __name__ == '__main__':
     #生成均衡和去噪后数据
-    for i in range(3, 7):
-        data = EquilibriumDenoising(p_former=r'F:\GraduateDesigning', class_num=i)  #此处只需前半段绝对路径
-        # dataframe = pd.DataFrame(data=data, index=list(range(1, 62551)),
-        #                          columns=['acc_x', 'acc_y', 'acc_z', 'gyr_x', 'gyr_y', 'gyr_z',
-        #                                   'mag_x', 'mag_y', 'mag_z', 'pre', 'mode_num'])
-        # print(dataframe)
-        # print(data.shape)
-        SaveFile(data, savepickle_p=r'F:\GraduateDesigning\datasetwithG\c_withG_%s.pickle' % i)
-    for i in range(3, 7):
-        data_main(path= r'F:\GraduateDesigning\datasetwithG\c_withG_%s.pickle' % i, num= i)
+    # for i in range(3, 7):
+    #     data = EquilibriumDenoising(p_former=r'F:\GraduateDesigning', class_num=i)  #此处只需前半段绝对路径
+    #     # dataframe = pd.DataFrame(data=data, index=list(range(1, 62551)),
+    #     #                          columns=['acc_x', 'acc_y', 'acc_z', 'gyr_x', 'gyr_y', 'gyr_z',
+    #     #                                   'mag_x', 'mag_y', 'mag_z', 'pre', 'mode_num'])
+    #     # print(dataframe)
+    #     # print(data.shape)
+    #     SaveFile(data, savepickle_p=r'F:\GraduateDesigning\datasetwithG\c_withG_%s.pickle' % i)
+    # for i in range(3, 7):
+    #     data_main(path= r'F:\GraduateDesigning\datasetwithG\c_withG_%s.pickle' % i, num= i)
     #组合6组和后四组数据得到最后数据集
-    data_sim = np.zeros(shape= (2500, 181))
-    for i in range(3, 7):
-        data = LoadFile(p= r'F:\GraduateDesigning\FrameFeatureDataset\c_framedataset_%s.pickle' % i)
-        # print(data[0, 0])
-        data_sim = data if data_sim.any() == 0 else np.vstack((data_sim, data))
-    SaveFile(data= data_sim, savepickle_p=r'F:\GraduateDesigning\finalDataset\data_sim.pickle')
+    # data_sim = np.zeros(shape= (2500, 181))
+    # for i in range(3, 7):
+    #     data = LoadFile(p= r'F:\GraduateDesigning\FrameFeatureDataset\c_framedataset_%s.pickle' % i)
+    #     # print(data[0, 0])
+    #     data_sim = data if data_sim.any() == 0 else np.vstack((data_sim, data))
+    # SaveFile(data= data_sim, savepickle_p=r'F:\GraduateDesigning\finalDataset\data_sim.pickle')
 
     #检查缺失值
     data = LoadFile(p= r'F:\GraduateDesigning\finalDataset\data_sim.pickle')
-    # print(data[:, 171])
-    nan = []
-    for i in range(data.shape[-1]):
-        if np.isnan(data[:, i]).any():
-            nan.append(i)
-    print(len(nan), nan)
+    # data = LoadFile(p=r'F:\GraduateDesigning\FrameFeatureDataset\c_framedataset_3.pickle')
+    print(data.shape)
+    # nan = []
+    # for i in range(data.shape[-1]):
+    #     if np.isnan(data[:, i]).any():
+    #         nan.append(i)
+    # print(len(nan), nan)
 
 
 

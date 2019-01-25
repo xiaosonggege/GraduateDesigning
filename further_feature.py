@@ -45,7 +45,7 @@ class Peak:
     def __init__(self, scan_series, window_length, start_Th, end_Th, peak_area_formmer):
         '''
         峰特征类构造函数
-        :param scan_series: 待处理序列（长度为400）
+        :param scan_series: 待处理序列
         :param window_length: 相邻滑动窗口长度(一半为10)
         :param start_Th: 峰起阈值（左右窗口中平均值）
         :param end_Th: 峰落阈值（左右窗口中平均值）
@@ -131,13 +131,15 @@ class Peak:
         else:
             return np.zeros(shape= (1, 5))
 
-def peak_main(p):
+def peak_main(p, num):
     '''
     峰特征、段特征提取主函数
+    :param p: 读取原始数据路径
+    :param num: 待保存文件编号
     :return: None
     '''
     #初始化遗留峰值区域向量
-    peak_featureformmer = np.zeros(shape= (1, 1200))
+    peak_featureformmer = np.zeros(shape= (1, 1000))
     #导入数据(只导入一种交通模式数据)
     dataset = LoadFile(p= p)
     #取重力加速度水平和竖直分量
@@ -152,13 +154,13 @@ def peak_main(p):
 
     #非重叠滑动窗口，窗口长度为: 1200, 滑动距离为: 1200,水平和竖直分量都需要提取
     for column_num in range(dataset_acc.shape[-1]):
-        for window_position in range(0, dataset_acc.shape[0] - 1200 + 1, 1200):
+        for window_position in range(0, dataset_acc.shape[0] - 1000 + 1, 1000):
             if window_position:
                 peak_area_formmer = []
             else:
                 peak_area_formmer = peak_featureformmer
                 # 创建峰特征类对象
-            peak = Peak(scan_series=dataset_acc[window_position:window_position + 1200, column_num], window_length=1200,
+            peak = Peak(scan_series=dataset_acc[window_position:window_position + 1000, column_num], window_length=1000,
                         start_Th=0.2, end_Th=0.2, peak_area_formmer=peak_area_formmer)
             # 得到峰值区域位置元组和未完峰值区域
             region, peak_featureformmer = peak.find_peak_areas()
@@ -166,8 +168,9 @@ def peak_main(p):
             peakfeature_mean, segfeature = peak.PeakFeatureExtract(region=region, peakfeatureformmer=peak_featureformmer)
             #5组峰特征为组成子特征矩阵
             sub_peakfeature = np.vstack((np.zeros(shape= (4, 5)), peakfeature_mean))
-            if column_num:
+            if not column_num:
                 peak_feature_h = sub_peakfeature if not window_position else np.vstack((peak_feature_h, sub_peakfeature))
+                # print('峰特征为 %s, %s' % peak_feature_h.shape)
             else:
                 peak_feature_v = sub_peakfeature if not window_position else np.vstack((peak_feature_v, sub_peakfeature))
 
@@ -179,11 +182,12 @@ def peak_main(p):
                 twice_segfeature = np.vstack((twice_segfeature, segfeature))
                 sub_seg_feature = peak.segcalc(segfeature= twice_segfeature)
                 sub_seg_feature = np.vstack((np.zeros(shape= (9, 5)), sub_seg_feature))
-                if column_num:
-                    seg_feature_h = sub_seg_feature if not window_position else np.vstack(
+                if not column_num:
+                    seg_feature_h = sub_seg_feature if window_position == 1000 else np.vstack(
                         (seg_feature_h, sub_seg_feature))
+                    # print('段特征为: %s, %s' % seg_feature_h.shape)
                 else:
-                    seg_feature_v = sub_seg_feature if not window_position else np.vstack(
+                    seg_feature_v = sub_seg_feature if window_position == 1000 else np.vstack(
                         (seg_feature_v, sub_seg_feature))
 
                 #计算段特征标志置1
@@ -194,20 +198,23 @@ def peak_main(p):
 
     #得到组合后的峰特征shape=（500200， 10）
     peak_feature = np.hstack((peak_feature_h, peak_feature_v))
-    print(peak_feature.shape)
+    # print(peak_feature.shape)
 
     #得到组合后的段特征shape=（500200， 10）
     seg_feature = np.hstack((seg_feature_h, seg_feature_v))
-    print(seg_feature.shape)
+    # print(seg_feature.shape)
 
     #得到峰特征和段特征的组合shape=（500200， 20）
     peak_seg = np.hstack((peak_feature, seg_feature))
+    SaveFile(peak_seg, savepickle_p= r'F:\GraduateDesigning\PeakSegdataset\c_peakseg_%s.pickle' % num)
     print(peak_seg.shape)
 
 if __name__ == '__main__':
-    for num in range(3, 7):
-        p = r'F:\GraduateDesigning\PreoperationData\c_preop_%s.pickle' % num
-        peak_main(p)
+    # for num in range(3, 7):
+    #     p = r'F:\GraduateDesigning\PreoperationData\c_preop_%s.pickle' % num
+    #     peak_main(p, num= num)
+    data = LoadFile(p= r'F:\GraduateDesigning\PeakSegdataset\c_peakseg_3.pickle')
+    print(data.all())
 
 
 
