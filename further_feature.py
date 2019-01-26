@@ -97,7 +97,6 @@ class Peak:
             sub_peak_area = self.__scan_series[start_point:] if not prefix_left else \
                 np.hstack((self.__peak_area_formmer.pop(), self.__scan_series.copy()))
             self.__peakfeatureformmer.append(sub_peak_area)
-
         return tuple(region), self.__peakfeatureformmer
 
     def PeakFeatureExtract(self, region, peakfeatureformmer):
@@ -107,12 +106,20 @@ class Peak:
         :param peakfeatureformmer: 存储峰值区域未结束的前半部分的列表, 可以为空
         :return: 峰值特征向量、峰特征存储矩阵（用于计算段特征）
         '''
+        # print('传入的region中元组第一个索引是: %s, peakfeatureformmer长度为: %s\n' % (region[0][0], len(peakfeatureformmer)))
         #初始化峰特征向量均值
         peakfeature_mean = np.zeros(shape= (1, 5))
         echo = 0
         for interval in region:
             if interval[0] == -1:
-                series = np.hstack((peakfeatureformmer, self.__scan_series[: interval[-1]]))
+                # if len(peakfeatureformmer):
+                #     formmer = peakfeatureformmer.pop()
+                # else:
+                #     formmer = np.zeros(shape= (1, 500))
+                # latter = self.__scan_series[:interval[-1]]
+                # print(formmer.shape, latter[np.newaxis, :].shape)
+                # series = np.hstack((formmer[np.newaxis, :], latter[np.newaxis, :]))
+                series = self.__scan_series[:interval[-1]]
             else:
                 series = self.__scan_series[interval[0]: interval[-1]]
             peakfeature = Peak.calc_feature(peak_area= series)
@@ -139,7 +146,7 @@ def peak_main(p, num):
     :return: None
     '''
     #初始化遗留峰值区域向量
-    peak_featureformmer = np.zeros(shape= (1, 1000))
+    peak_featureformmer = []
     #导入数据(只导入一种交通模式数据)
     dataset = LoadFile(p= p)
     #取重力加速度水平和竖直分量
@@ -155,17 +162,16 @@ def peak_main(p, num):
     #非重叠滑动窗口，窗口长度为: 1200, 滑动距离为: 1200,水平和竖直分量都需要提取
     for column_num in range(dataset_acc.shape[-1]):
         for window_position in range(0, dataset_acc.shape[0] - 1000 + 1, 1000):
-            if window_position:
-                peak_area_formmer = []
-            else:
-                peak_area_formmer = peak_featureformmer
-                # 创建峰特征类对象
-            peak = Peak(scan_series=dataset_acc[window_position:window_position + 1000, column_num], window_length=1000,
+            peak_area_formmer = peak_featureformmer
+            # 创建峰特征类对象
+            peak = Peak(scan_series=dataset_acc[window_position:window_position + 1000, column_num], window_length=10,
                         start_Th=0.2, end_Th=0.2, peak_area_formmer=peak_area_formmer)
             # 得到峰值区域位置元组和未完峰值区域
             region, peak_featureformmer = peak.find_peak_areas()
+            # print('接收到的region长度为: %s, peak_featureformmer长度为: %s' % (len(region), len(peak_featureformmer)))
             # 得到单列峰特征平均值和单列段特征矩阵
             peakfeature_mean, segfeature = peak.PeakFeatureExtract(region=region, peakfeatureformmer=peak_featureformmer)
+            # print(peakfeature_mean)
             #5组峰特征为组成子特征矩阵
             sub_peakfeature = np.vstack((np.zeros(shape= (4, 5)), peakfeature_mean))
             if not column_num:
@@ -213,8 +219,21 @@ if __name__ == '__main__':
     # for num in range(3, 7):
     #     p = r'F:\GraduateDesigning\PreoperationData\c_preop_%s.pickle' % num
     #     peak_main(p, num= num)
-    data = LoadFile(p= r'F:\GraduateDesigning\PeakSegdataset\c_peakseg_3.pickle')
-    print(data.all())
+    # data = LoadFile(p= r'F:\GraduateDesigning\PeakSegdataset\c_peakseg_3.pickle')
+    # print(data == np.zeros(shape= data.shape))
+    #合并4组峰段特征
+    # dataset_peak_seg = np.zeros(shape= (1, 20))
+    # for i in range(3, 7):
+    #     data = LoadFile(p= r'F:\GraduateDesigning\PeakSegdataset\c_peakseg_%s.pickle' % i)
+    #     dataset_peak_seg = data if dataset_peak_seg.any() == 0 else np.vstack((dataset_peak_seg, data))
+    # print(dataset_peak_seg.shape)
+    # SaveFile(data= dataset_peak_seg, savepickle_p= r'F:\GraduateDesigning\finalDataset\data_peak_sim.pickle')
+    #组合帧特征和峰特征和段特征
+    data_frame = LoadFile(p= r'F:\GraduateDesigning\finalDataset\data_frame_sim.pickle')
+    data_peak_seg = LoadFile(p= r'F:\GraduateDesigning\finalDataset\data_peak_sim.pickle')
+    dataset_sim = np.hstack((data_frame[:, :-1], data_peak_seg, data_frame[:, -1][:, np.newaxis]))
+    SaveFile(data= dataset_sim, savepickle_p= r'F:\GraduateDesigning\finalDataset\data_sim.pickle')
+
 
 
 

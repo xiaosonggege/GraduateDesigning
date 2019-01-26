@@ -271,17 +271,17 @@ if __name__ == '__main__':
     # for i in range(3, 7):
     #     data_main(path= r'F:\GraduateDesigning\datasetwithG\c_withG_%s.pickle' % i, num= i)
     #组合6组和后四组数据得到最后数据集
-    # data_sim = np.zeros(shape= (2500, 181))
-    # for i in range(3, 7):
-    #     data = LoadFile(p= r'F:\GraduateDesigning\FrameFeatureDataset\c_framedataset_%s.pickle' % i)
-    #     # print(data[0, 0])
-    #     data_sim = data if data_sim.any() == 0 else np.vstack((data_sim, data))
-    # SaveFile(data= data_sim, savepickle_p=r'F:\GraduateDesigning\finalDataset\data_sim.pickle')
+    data_sim = np.zeros(shape= (2500, 181))
+    for i in range(3, 7):
+        data = LoadFile(p= r'F:\GraduateDesigning\FrameFeatureDataset\c_framedataset_%s.pickle' % i)
+        # print(data[0, 0])
+        data_sim = data if data_sim.any() == 0 else np.vstack((data_sim, data))
+    SaveFile(data= data_sim, savepickle_p=r'F:\GraduateDesigning\finalDataset\data_frame_sim.pickle')
 
     #检查缺失值
-    data = LoadFile(p= r'F:\GraduateDesigning\finalDataset\data_sim.pickle')
-    # data = LoadFile(p=r'F:\GraduateDesigning\FrameFeatureDataset\c_framedataset_3.pickle')
-    print(data.shape)
+    # data = LoadFile(p= r'F:\GraduateDesigning\finalDataset\data_frame_sim.pickle')
+    # # data = LoadFile(p=r'F:\GraduateDesigning\FrameFeatureDataset\c_framedataset_3.pickle')
+    # print(data.shape)
     # nan = []
     # for i in range(data.shape[-1]):
     #     if np.isnan(data[:, i]).any():

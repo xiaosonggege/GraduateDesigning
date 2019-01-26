@@ -203,8 +203,8 @@ linestyle = ['--', '-.', ':', '-']
 marker = ['*', 's', 'd', 'v']
 color = ['r', 'g', 'b', 'c']
 j = 0
-for i in range(0, data_sim.shape[0], 1250):
-    sub_series = data_sim[i:i+1250, -30]
+for i in range(0, data_sim.shape[0], 2500):
+    sub_series = data_sim[i:i+2500, -30]
     cdf = cdf_picture(sub_series)
     cdf = (cdf - np.min(cdf)) / (np.max(cdf) - np.min(cdf))
     plt.plot(cdf, linestyle= linestyle[j], color= color[j], marker= marker[j], label= mode[j])
