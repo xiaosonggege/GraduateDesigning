@@ -230,9 +230,11 @@ if __name__ == '__main__':
     # SaveFile(data= dataset_peak_seg, savepickle_p= r'F:\GraduateDesigning\finalDataset\data_peak_sim.pickle')
     #组合帧特征和峰特征和段特征
     data_frame = LoadFile(p= r'F:\GraduateDesigning\finalDataset\data_frame_sim.pickle')
+    # print(data_frame.shape)
     data_peak_seg = LoadFile(p= r'F:\GraduateDesigning\finalDataset\data_peak_sim.pickle')
     dataset_sim = np.hstack((data_frame[:, :-1], data_peak_seg, data_frame[:, -1][:, np.newaxis]))
-    SaveFile(data= dataset_sim, savepickle_p= r'F:\GraduateDesigning\finalDataset\data_sim.pickle')
+    print(dataset_sim.shape)
+    # SaveFile(data= dataset_sim, savepickle_p= r'F:\GraduateDesigning\finalDataset\data_sim.pickle')
 
 
 

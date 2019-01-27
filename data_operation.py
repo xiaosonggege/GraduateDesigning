@@ -134,7 +134,7 @@ class StatisticStack:
         :return: 数据集中单个列按采样频率计算滑动窗口计算后的特征向量, shape= (20,)
         '''
         return np.array([self.__mean, self.__var, self.__std, self.__median, self.__min, self.__max, self.__max_min,
-                         self.__interquartile_range, self.__kurtosis, self.__skewness, self.__integral,self.__mean_cross_rate,
+                         self.__interquartile_range, self.__kurtosis, self.__skewness, self.__integral, self.__mean_cross_rate,
                          self.__spectral_energy, self.__fft_1, self.__fft_2, self.__fft_3, self.__fft_4,
                          self.__fft_5, self.__fft_6])
 
@@ -201,7 +201,7 @@ def matrix_operation(data):
     :param data: 待处理数据,shape= (500200, 9+1)
     :return: 数据矩阵
     '''
-    dataset = np.zeros(shape= (1, 9*19)) #此处9*19需要修改为9*每列具有的所有特征数（统计+时域+频域）总和
+    dataset = np.zeros(shape= (1, 9*19)) #此处9*19=171需要修改为9*每列具有的所有特征数（统计+时域+频域）总和
 
     for i in range(0, data.shape[0]-200, 200): #防止越界
         feature_dataset = np.zeros(shape=(1, 20))  # 此处20需要修改为每列具有的所有特征数（统计+时域+频域）总和

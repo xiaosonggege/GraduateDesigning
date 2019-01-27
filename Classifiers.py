@@ -89,7 +89,7 @@ class MultiClassifiers:
         return tuple([precision_rate_ave, recall_rate_ave, F1_score, precision_pd, recall_pd, accuracy])
 
     @classmethod
-    def multi_SVM(cls, kernel, C, decision_function_shape, tol):
+    def multi_SVM(cls, kernel, C, decision_function_shape, tol, degree, coef0):
         '''
         多分类SVM分类器
         :param kernel: 选择的核函数 ‘linear’, ‘poly’, ‘rbf’, ‘sigmoid’, ‘precomputed’
@@ -97,6 +97,8 @@ class MultiClassifiers:
         :param decision_function_shape:  'ovo'/'ovr'
         # 选择一对多（自己是一类，其他事一类，k类有k个svm）还是一对一（自己是一类，另外一个是一类，k类有k（k-1）/2个svm）
         :param tol: # 停止训练时的误差阈值
+        :param degree: 该参数只对多项式核函数有用，是指多项式核函数的阶数n
+        :param coef0: 核函数中的独立项，只对多项式核函数和sigmod核函数有用，是指其中的参数C
         :return: SVM对象
         '''
         multi_svm = SVC(
@@ -104,7 +106,9 @@ class MultiClassifiers:
             C= C,
             decision_function_shape= decision_function_shape,
             tol= tol,
-            gamma='auto'
+            gamma='auto',
+            degree= degree,
+            coef0= coef0
         )
 
         return multi_svm
@@ -280,8 +284,8 @@ class MultiClassifiers:
         statistic_table['F1'] = 2 * np.array(statistic_table['precision']) * np.array(statistic_table['recall']) / (np.array(statistic_table['precision'])
                                                                                                                          + np.array(statistic_table['recall']))
         # print(statistic_table)
-        statistic_table.to_excel(r'F:\GraduateDesigning\ClassifierResult\Adaboost.xlsx')
-        # statistic_table.to_excel(r'F:\GraduateDesigning\ClassifierResult\XGBoost.xlsx')
+        # statistic_table.to_excel(r'F:\GraduateDesigning\ClassifierResult\Adaboost.xlsx')
+        statistic_table.to_excel(r'F:\GraduateDesigning\ClassifierResult\XGBoost.xlsx')
         # statistic_table.to_excel(r'F:\GraduateDesigning\ClassifierResult\SVM.xlsx')
 
 

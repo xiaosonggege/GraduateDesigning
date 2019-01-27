@@ -38,7 +38,7 @@ def model_main(dataset_all, dataset_sim, operation):
     multiclassifiers = MultiClassifiers(dataset_all=dataset_all, dataset_sim=dataset_sim)
     if operation == 'SVM':
         #SVM分类器训练
-        SVM = MultiClassifiers.multi_SVM(kernel= 'rbf', C= 1.0, decision_function_shape= 'ovo', tol= 1e-2)
+        SVM = MultiClassifiers.multi_SVM(kernel= 'rbf', C= 1.0, decision_function_shape= 'ovo', tol= 1e-3, degree= 3, coef0= 1)
         multiclassifiers.training_main(model_name= 'SVM分类器', model= SVM)
     elif operation == 'Adaboost':
         #Adaboost分类器训练
@@ -119,18 +119,35 @@ def model_main(dataset_all, dataset_sim, operation):
         plt.show()
 
 if __name__ == '__main__':
-    #加载数据
+    #加载数据(Adaboost, XGBoost数据集)
     dataset_sim = LoadFile(p= r'F:\GraduateDesigning\finalDataset\data_sim.pickle')
-
+    # print(dataset_sim.shape)
     imp = Imputer(missing_values='NaN', strategy='mean', axis=0, verbose=0, copy=True)
     dataset_sim = imp.fit_transform(dataset_sim)
     np.random.shuffle(dataset_sim)
+    #数据归一化
+    dataset_sim_feature = dataset_sim[:, :-1]
+    dataset_sim_feature = (dataset_sim_feature - np.min(dataset_sim_feature, axis= 0)) / (np.max(dataset_sim_feature, axis= 0) - np.min(dataset_sim_feature, axis= 0))
+    dataset_sim = np.hstack((dataset_sim_feature, dataset_sim[:, -1][:, np.newaxis]))
+    # print(dataset_sim.shape, dataset_sim[:, -1])
+    #针对SVM制作数据集（制作待删除列索引）
+    # delete_array_1 = [14, 17, 19]
+    # delete_array = [14, 17, 19]
+    # i = 1
+    # while ((19 + i * 19) <= 171):
+    #     delete_array.extend([j + i * 19 for j in delete_array_1])
+    #     i += 1
+    # delete_array.extend([176, 177, 178, 179, 180, 186, 187, 188, 189])
+    # dataset_sim_svm = np.delete(dataset_sim, delete_array, 1)
+    ###########################
     # print(dataset_all[:2, -1])
     # data_all = pd.DataFrame(data= dataset_all)
     # print(np.isnan(dataset_all).any())
     # print(dataset_all.dtype)
     #对SVM分类器进行十折交叉验证
-    model_main(dataset_all= dataset_sim, dataset_sim= dataset_sim, operation= 'Adaboost')
+    model_main(dataset_all= dataset_sim, dataset_sim= dataset_sim, operation= 't-SNE')
+    # model_main(dataset_all= dataset_sim_svm, dataset_sim= dataset_sim_svm, operation= 'SVM')
+
 
 
 
