@@ -62,7 +62,7 @@ def model_main(dataset_all, dataset_sim, operation):
     else:
         #t-SNE降维可视化
         mode = dict([('3', 'Subway'), ('4', 'Train'), ('5', 'Bus'), ('6', 'Car')])
-        tsne = MultiClassifiers.t_SNE(n_components=2, init='random')
+        tsne = MultiClassifiers.t_SNE(n_components=3, init='random')
         X_tsne = tsne.fit_transform(dataset_sim[:, :-1])
         #归一化
         X_tsne = (X_tsne - np.min(X_tsne, axis= 0)) / (np.max(X_tsne, axis= 0) - np.min(X_tsne, axis= 0))

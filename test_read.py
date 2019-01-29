@@ -16,16 +16,10 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-delete_array_1 = [14, 17, 19]
-delete_array = [14, 17, 19]
-i = 1
-while ((19+i*19) <= 171):
-    delete_array.extend([j + i * 19 for j in delete_array_1])
-    i += 1
 
-delete_array.extend([176, 177, 178, 179, 180, 186, 187, 188, 189, 190])
-print(delete_array)
-print(len(delete_array))
+p = r'F:\GraduateDesigning\featrure\original_data_Label2_features.txt'
+data = np.loadtxt(p)
+print(data.shape)
 
 
 
