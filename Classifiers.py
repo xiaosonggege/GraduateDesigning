@@ -206,6 +206,8 @@ class MultiClassifiers:
         否则反之。当该值在0.2-0.8之间时，无变化。
         :return: t-SNE类
         '''
+        #10000数据集参数设置：n_components= 3, perplexity= 30.0, early_exaggeration= 12, learning_rate= 200, n_iter= 1000
+        #min_grad_norm= 1e-7, init= 'pca', verbose= 0, method= 'barnes_hut', angle= 0.5
         tsne = manifold.TSNE(
             n_components=n_components,
             perplexity=perplexity,

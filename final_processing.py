@@ -124,7 +124,7 @@ if __name__ == '__main__':
     # print(dataset_sim.shape)
     imp = Imputer(missing_values='NaN', strategy='mean', axis=0, verbose=0, copy=True)
     dataset_sim = imp.fit_transform(dataset_sim)
-    np.random.shuffle(dataset_sim)
+    # np.random.shuffle(dataset_sim)
     #数据归一化
     dataset_sim_feature = dataset_sim[:, :-1]
     dataset_sim_feature = (dataset_sim_feature - np.min(dataset_sim_feature, axis= 0)) / (np.max(dataset_sim_feature, axis= 0) - np.min(dataset_sim_feature, axis= 0))
